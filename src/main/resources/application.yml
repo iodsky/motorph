@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: motorph
+
+server:
+  port: ${PORT}
+  servlet:
+    context-path: /api

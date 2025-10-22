@@ -1,0 +1,11 @@
+# Maven build folder
+/target/
+
+# IDEs
+.idea/
+*.iml
+/.vscode/
+/out/
+
+# Environment
+*.env

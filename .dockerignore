@@ -1,0 +1,16 @@
+Dockerfile
+compose.*.yml
+
+.git
+.gitignore
+
+target/
+
+.idea
+*iml
+
+*md
+
+.env
+
+.mvn/wrapper/maven-wrapper.jar
