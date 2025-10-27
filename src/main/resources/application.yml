@@ -6,3 +6,8 @@ server:
   port: ${PORT}
   servlet:
     context-path: /api
+
+security:
+  jwt:
+    secret-key: ${JWT_SECRET}
+    expiration-time: ${JWT_EXPIRATION}
