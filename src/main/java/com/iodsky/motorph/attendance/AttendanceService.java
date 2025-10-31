@@ -1,6 +1,6 @@
 package com.iodsky.motorph.attendance;
 
-import com.iodsky.motorph.common.exception.NotFoundException;
+import com.iodsky.motorph.common.exception.*;
 import com.iodsky.motorph.employee.EmployeeService;
 import com.iodsky.motorph.employee.model.Employee;
 import com.iodsky.motorph.security.user.User;
@@ -30,7 +30,7 @@ public class AttendanceService {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         if (!(principal instanceof User user)) {
-            throw new RuntimeException("Unauthorized access");
+            throw new UnauthorizedException("Authentication required to access this resource");
         }
 
         // Determine role flags
@@ -50,7 +50,7 @@ public class AttendanceService {
 
             // Authorization rule
             if (!isHr && !employeeId.equals(currentEmployeeId)) {
-                throw new IllegalArgumentException("Only HR can create attendance for another employee");
+                throw new ForbiddenException("You don't have the permissions to access this resource");
             }
         }
 
@@ -65,13 +65,13 @@ public class AttendanceService {
 
         // Prevent early clock-in
         if (clockInTime.isBefore(EARLIEST_START_SHIFT)) {
-            throw new IllegalArgumentException("Cannot clock in before " + EARLIEST_START_SHIFT);
+            throw new BadRequestException("Cannot clock in before " + EARLIEST_START_SHIFT);
         }
 
         // Check for existing attendance record
         Optional<Attendance> exists = attendanceRepository.findByEmployee_IdAndDate(employeeId, attendanceDate);
         if (exists.isPresent()) {
-            throw new IllegalArgumentException("Attendance already exists for " + attendanceDate);
+            throw new ConflictException("Attendance already exists");
         }
 
         // Build attendance
@@ -93,36 +93,37 @@ public class AttendanceService {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         if (!(principal instanceof User user)) {
-            throw new RuntimeException("Unauthorized: invalid user context");
+            throw new UnauthorizedException("Authentication required to access this resource");
         }
 
         boolean isHr = "HR".equalsIgnoreCase(user.getUserRole().getRole());
 
         Attendance attendance = attendanceRepository.findById(id)
+                // Not yet clocked in
                 .orElseThrow(() -> new NotFoundException("Attendance not found with id: " + id));
 
         long currentEmpId = user.getEmployee().getId();
         long employeeId = attendance.getEmployee().getId();
 
         if (!isHr && employeeId != currentEmpId) {
-            throw new RuntimeException("You don't have permission to perform this operation.");
+            throw new ForbiddenException("You don't have the permissions to access this resource");
         }
 
         if (attendanceDto == null) {
             if (attendance.getTimeOut() != null && !attendance.getTimeOut().equals(LocalTime.MIN)) {
-                throw new IllegalArgumentException("You have already clocked out for the day.");
+                throw new ConflictException("You have already clocked out for the day.");
             }
 
             LocalTime clockOut = LocalTime.now();
             if (clockOut.isBefore(attendance.getTimeIn())) {
-                throw new IllegalArgumentException("Clock-out time cannot be before clock-in time");
+                throw new BadRequestException("Clock-out time cannot be before clock-in time");
             }
 
             attendance.setTimeOut(clockOut);
         }
         else {
             if (!isHr) {
-                throw new RuntimeException("You don't have permission to perform this operation");
+                throw new ForbiddenException("You don't have the permissions to access this resource");
             }
 
             if (attendanceDto.getTimeIn() != null) {
@@ -162,7 +163,7 @@ public class AttendanceService {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         if (!(principal instanceof User user)) {
-            throw new RuntimeException("Unauthorized");
+            throw new UnauthorizedException("Authentication required to access this resource");
         }
 
         boolean isHr = "HR".equalsIgnoreCase(user.getUserRole().getRole());
@@ -173,7 +174,7 @@ public class AttendanceService {
         }
 
         if (!isHr && !employeeId.equals(currentEmployeeId)) {
-            throw new RuntimeException("You don't have the permissions to perform this operation");
+            throw new ForbiddenException("You don't have permission to access this resource");
         }
 
         DateRange dateRange = resolveDateRange(startDate, endDate);
