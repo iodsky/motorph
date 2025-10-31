@@ -154,6 +154,10 @@ public class AttendanceService {
     }
 
     public List<Attendance> getAllAttendances(LocalDate startDate, LocalDate endDate) {
+        if (startDate != null && endDate == null) {
+            return attendanceRepository.findAllByDate(startDate);
+        }
+
         DateRange dateRange = resolveDateRange(startDate, endDate);
 
         return attendanceRepository.findAllByDateBetween(dateRange.startDate(), dateRange.endDate());
