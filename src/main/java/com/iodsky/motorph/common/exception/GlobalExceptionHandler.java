@@ -38,6 +38,24 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
     }
 
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ErrorResponse> handleConflictException(ConflictException ex) {
+        ErrorResponse error = new ErrorResponse(LocalDateTime.now(), 409, ex.getMessage(), null);
+        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorizedException(UnauthorizedException ex) {
+        ErrorResponse error = new ErrorResponse(LocalDateTime.now(), 401, ex.getMessage(), null);
+        return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+    }
+    
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ErrorResponse> handleForbiddenException(ForbiddenException ex) {
+        ErrorResponse error = new ErrorResponse(LocalDateTime.now(), 403, ex.getMessage(), null);
+        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleAllOtherException(Exception ex) {
         ErrorResponse error = new ErrorResponse(LocalDateTime.now(), 500, ex.getMessage(), null);
