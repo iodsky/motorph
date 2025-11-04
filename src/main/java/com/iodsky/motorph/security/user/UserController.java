@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -28,6 +29,11 @@ public class UserController {
     public ResponseEntity<List<UserDto>> getUsers(@RequestParam(required = false) String role) {
         List<UserDto> list = userService.getAllUsers(role).stream().map(userMapper::toDto).toList();
         return ResponseEntity.ok(list);
+    }
+
+    @PostMapping("/import")
+    public ResponseEntity<Integer> importUsers(@RequestPart("file") MultipartFile file) {
+        return ResponseEntity.ok(userService.importUsers(file));
     }
 
 }

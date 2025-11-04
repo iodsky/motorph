@@ -2,10 +2,7 @@ package com.iodsky.motorph.security.user;
 
 import com.iodsky.motorph.employee.model.Employee;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
@@ -19,7 +16,10 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "users")
-@Data
+@Getter
+@Setter
+@ToString(exclude = {"employee", "userRole"})
+@EqualsAndHashCode(exclude = {"employee", "userRole"})
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder

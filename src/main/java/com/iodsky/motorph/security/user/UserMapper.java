@@ -1,9 +1,10 @@
 package com.iodsky.motorph.security.user;
 
+import com.iodsky.motorph.csvimport.CsvMapper;
 import org.springframework.stereotype.Component;
 
 @Component
-public class UserMapper {
+public class UserMapper implements CsvMapper<User, UserCsvRecord> {
 
     public UserDto toDto(User user) {
         return UserDto
@@ -24,4 +25,21 @@ public class UserMapper {
                 .build();
     }
 
+    @Override
+    public User toEntity(UserCsvRecord record) {
+        return User.builder()
+                .email(record.getEmail())
+                .password(record.getPassword())
+                .build();
+    }
+
+    @Override
+    public UserCsvRecord toCsvRecord(User user) {
+        return UserCsvRecord.builder()
+                .employeeId(user.getEmployee().getId())
+                .role(user.getUserRole().getRole())
+                .email(user.getEmail())
+                .password(user.getPassword())
+                .build();
+    }
 }
