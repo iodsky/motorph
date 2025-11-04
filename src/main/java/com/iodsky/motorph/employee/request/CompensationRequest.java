@@ -15,6 +15,7 @@ public class CompensationRequest {
     @Positive
     private BigDecimal basicSalary;
 
+    @NotNull
     private List<BenefitDto> benefits;
 
 }
