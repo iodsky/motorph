@@ -1,11 +1,9 @@
 package com.iodsky.motorph.payroll.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.iodsky.motorph.employee.model.Employee;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -13,8 +11,14 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "payroll")
-@Data
+@Table(
+        name = "payroll",
+        uniqueConstraints = @UniqueConstraint(
+                columnNames = {"employee_id", "period_start_date", "period_end_date"}
+        )
+)
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -26,9 +30,11 @@ public class Payroll {
 
     @ManyToOne
     @JoinColumn(name = "employee_id")
+    @JsonIgnore
     private Employee employee;
 
-    @OneToMany(mappedBy = "payroll", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "payroll", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Deduction> deductions;
 
     @Column(name = "period_start_date")
