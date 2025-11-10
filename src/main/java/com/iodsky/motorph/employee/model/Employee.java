@@ -31,6 +31,7 @@ public class Employee {
 
     private LocalDate birthday;
 
+    @Column(unique = true)
     private String address;
 
     @Column(name = "phone_number", unique = true)

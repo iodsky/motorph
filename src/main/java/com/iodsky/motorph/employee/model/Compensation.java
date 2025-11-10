@@ -1,5 +1,6 @@
 package com.iodsky.motorph.employee.model;
 
+import com.iodsky.motorph.payroll.model.Benefit;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -34,13 +36,7 @@ public class Compensation {
     @Column(name = "semi_monthly_rate")
     private BigDecimal semiMonthlyRate;
 
-    @Column(name = "rice_subsidy")
-    private BigDecimal riceSubsidy;
-
-    @Column(name = "clothing_allowance")
-    private BigDecimal clothingAllowance;
-
-    @Column(name = "phone_allowance")
-    private BigDecimal phoneAllowance;
+    @OneToMany(mappedBy = "compensation", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<Benefit> benefits;
 
 }

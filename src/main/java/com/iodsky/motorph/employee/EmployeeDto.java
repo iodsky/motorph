@@ -1,10 +1,12 @@
 package com.iodsky.motorph.employee;
 
+import com.iodsky.motorph.payroll.BenefitDto;
 import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @Builder
@@ -27,8 +29,6 @@ public class EmployeeDto {
     private BigDecimal basicSalary;
     private BigDecimal hourlyRate;
     private BigDecimal semiMonthlyRate;
-    private BigDecimal riceSubsidy;
-    private BigDecimal clothingAllowance;
-    private BigDecimal phoneAllowance;
+    private List<BenefitDto> benefits;
 
 }

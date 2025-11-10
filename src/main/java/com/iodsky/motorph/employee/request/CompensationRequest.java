@@ -1,10 +1,12 @@
 package com.iodsky.motorph.employee.request;
 
+import com.iodsky.motorph.payroll.BenefitDto;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 public class CompensationRequest {
@@ -14,23 +16,6 @@ public class CompensationRequest {
     private BigDecimal basicSalary;
 
     @NotNull
-    @Positive
-    private BigDecimal hourlyRate;
-
-    @NotNull
-    @Positive
-    private BigDecimal semiMonthlyRate;
-
-    @NotNull
-    @Positive
-    private BigDecimal riceSubsidy;
-
-    @NotNull
-    @Positive
-    private BigDecimal clothingAllowance;
-
-    @NotNull
-    @Positive
-    private BigDecimal phoneAllowance;
+    private List<BenefitDto> benefits;
 
 }

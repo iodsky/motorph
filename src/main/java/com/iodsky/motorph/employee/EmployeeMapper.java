@@ -5,18 +5,31 @@ import com.iodsky.motorph.employee.model.Employee;
 import com.iodsky.motorph.employee.model.EmploymentDetails;
 import com.iodsky.motorph.employee.model.GovernmentId;
 import com.iodsky.motorph.employee.request.EmployeeRequest;
-import com.iodsky.motorph.organization.Department;
-import com.iodsky.motorph.organization.Position;
+import com.iodsky.motorph.payroll.BenefitDto;
+import com.iodsky.motorph.payroll.BenefitMapper;
+import com.iodsky.motorph.payroll.model.Benefit;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.List;
+
 @Component
+@RequiredArgsConstructor
 public class EmployeeMapper {
+
+    private final BenefitMapper benefitMapper;
 
     public EmployeeDto toDto(Employee employee) {
 
         Employee supervisor = employee.getEmploymentDetails().getSupervisor();
         String supervisorName = supervisor != null ? supervisor.getFirstName() + " " + supervisor.getLastName() : "N/A";
 
+        List<BenefitDto> benefits = employee.getCompensation().getBenefits()
+                .stream()
+                .map(benefitMapper::toDto)
+                .toList();
         return EmployeeDto.builder()
                 .id(employee.getId())
                 .firstName(employee.getFirstName())
@@ -35,9 +48,7 @@ public class EmployeeMapper {
                 .basicSalary(employee.getCompensation().getBasicSalary())
                 .hourlyRate(employee.getCompensation().getHourlyRate())
                 .semiMonthlyRate(employee.getCompensation().getSemiMonthlyRate())
-                .riceSubsidy(employee.getCompensation().getRiceSubsidy())
-                .clothingAllowance(employee.getCompensation().getClothingAllowance())
-                .phoneAllowance(employee.getCompensation().getPhoneAllowance())
+                .benefits(benefits)
                 .build();
     }
 
@@ -63,15 +74,24 @@ public class EmployeeMapper {
                 .status(request.getEmploymentDetails().getStatus())
                 .build();
 
+        BigDecimal basicSalary = request.getCompensation().getBasicSalary();
+        BigDecimal semiMonthlyRate = basicSalary.divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP);
+        BigDecimal hourlyRate = basicSalary.divide(BigDecimal.valueOf(21.75).multiply(BigDecimal.valueOf(8)), 2, RoundingMode.HALF_UP);
+
         Compensation compensation = Compensation.builder()
                 .employee(employee)
-                .basicSalary(request.getCompensation().getBasicSalary())
-                .hourlyRate(request.getCompensation().getHourlyRate())
-                .semiMonthlyRate(request.getCompensation().getSemiMonthlyRate())
-                .riceSubsidy(request.getCompensation().getRiceSubsidy())
-                .clothingAllowance(request.getCompensation().getClothingAllowance())
-                .phoneAllowance(request.getCompensation().getPhoneAllowance())
+                .basicSalary(basicSalary)
+                .semiMonthlyRate(semiMonthlyRate)
+                .hourlyRate(hourlyRate)
                 .build();
+
+        List<Benefit> benefits = request.getCompensation().getBenefits()
+                        .stream()
+                        .map(benefitMapper::toEntity)
+                        .toList();
+
+        benefits.forEach(b -> b.setCompensation(compensation));
+        compensation.setBenefits(benefits);
 
         employee.setGovernmentId(governmentId);
         employee.setEmploymentDetails(employmentDetails);
@@ -113,12 +133,21 @@ public class EmployeeMapper {
             existing.setCompensation(new Compensation());
             existing.getCompensation().setEmployee(existing);
         }
+
+        BigDecimal basicSalary = request.getCompensation().getBasicSalary();
+        BigDecimal semiMonthlyRate = basicSalary.divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP);
+        BigDecimal hourlyRate = basicSalary.divide(BigDecimal.valueOf(21.75).multiply(BigDecimal.valueOf(8)), 2, RoundingMode.HALF_UP);
+
         Compensation comp = existing.getCompensation();
-        comp.setBasicSalary(request.getCompensation().getBasicSalary());
-        comp.setHourlyRate(request.getCompensation().getHourlyRate());
-        comp.setSemiMonthlyRate(request.getCompensation().getSemiMonthlyRate());
-        comp.setRiceSubsidy(request.getCompensation().getRiceSubsidy());
-        comp.setClothingAllowance(request.getCompensation().getClothingAllowance());
-        comp.setPhoneAllowance(request.getCompensation().getPhoneAllowance());
+        comp.setBasicSalary(basicSalary);
+        comp.setSemiMonthlyRate(semiMonthlyRate);
+        comp.setHourlyRate(hourlyRate);
+
+        List<Benefit> benefits = request.getCompensation().getBenefits().stream()
+                .map(benefitMapper::toEntity)
+                .toList();
+        benefits.forEach(b -> b.setCompensation(comp));
+        comp.getBenefits().clear();
+        comp.getBenefits().addAll(benefits);
     }
 }
