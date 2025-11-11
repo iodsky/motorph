@@ -23,7 +23,7 @@ public class PayrollController {
     @PostMapping
     public ResponseEntity<PayrollDto> createPayroll(
             @RequestBody PayrollRequest request)  {
-        Payroll payroll = payrollService.createPayrollSingle(
+        Payroll payroll = payrollService.createPayroll(
                 request.getEmployeeId(),
                 request.getPeriodStartDate(),
                 request.getPeriodEndDate(),
@@ -33,7 +33,7 @@ public class PayrollController {
 
     @PreAuthorize("hasRole('PAYROLL')")
     @PostMapping("/batch")
-    public ResponseEntity<Integer> batchCreatePayroll(
+    public ResponseEntity<Integer> createPayrollBatch(
             @RequestBody PayrollRequest request)  {
         Integer count = payrollService.createPayrollBatch(
                 request.getPeriodStartDate(),
