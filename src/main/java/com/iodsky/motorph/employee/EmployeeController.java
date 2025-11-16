@@ -16,7 +16,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -41,11 +40,11 @@ public class EmployeeController {
     public ResponseEntity<PageDto<EmployeeDto>> getAllEmployees(
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit,
-            @RequestParam(required = false) String departmentId,
-            @RequestParam(required = false) @Positive Long supervisorId,
+            @RequestParam(required = false) String department,
+            @RequestParam(required = false) @Positive Long supervisor,
             @RequestParam(required = false) String status
     ) {
-        Page<Employee> employees = employeeService.getAllEmployees(page, limit, departmentId, supervisorId, status);
+        Page<Employee> employees = employeeService.getAllEmployees(page, limit, department, supervisor, status);
 
         return ResponseEntity.ok(PageMapper.map(employees, employeeMapper::toDto));
     }
