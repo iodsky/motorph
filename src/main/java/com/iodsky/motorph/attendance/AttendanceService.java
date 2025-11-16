@@ -7,6 +7,9 @@ import com.iodsky.motorph.employee.EmployeeService;
 import com.iodsky.motorph.employee.model.Employee;
 import com.iodsky.motorph.security.user.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -164,17 +167,19 @@ public class AttendanceService {
         return attendanceRepository.save(attendance);
     }
 
-    public List<Attendance> getAllAttendances(LocalDate startDate, LocalDate endDate) {
+    public Page<Attendance> getAllAttendances(int page, int limit, LocalDate startDate, LocalDate endDate) {
+        Pageable pageable = PageRequest.of(page, limit);
+
         if (startDate != null && endDate == null) {
-            return attendanceRepository.findAllByDate(startDate);
+            return attendanceRepository.findAllByDate(startDate, pageable);
         }
 
         DateRange dateRange = dateRangeResolver.resolve(startDate, endDate);
 
-        return attendanceRepository.findAllByDateBetween(dateRange.startDate(), dateRange.endDate());
+        return attendanceRepository.findAllByDateBetween(dateRange.startDate(), dateRange.endDate(), pageable);
     }
 
-    public List<Attendance> getEmployeeAttendances(Long employeeId, LocalDate startDate, LocalDate endDate) {
+    public Page<Attendance> getEmployeeAttendances(int page, int limit, Long employeeId, LocalDate startDate, LocalDate endDate) {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         if (!(principal instanceof User user)) {
@@ -193,9 +198,14 @@ public class AttendanceService {
             throw new ForbiddenException("You don't have permission to access this resource");
         }
 
+        Pageable pageable = PageRequest.of(page, limit);
         DateRange dateRange = dateRangeResolver.resolve(startDate, endDate);
 
-        return attendanceRepository.findByEmployee_IdAndDateBetween(employeeId, dateRange.startDate(), dateRange.endDate());
+        return attendanceRepository.findByEmployee_IdAndDateBetween(employeeId, dateRange.startDate(), dateRange.endDate(), pageable);
+    }
+
+    public List<Attendance> getEmployeeAttendances(Long employeeId, LocalDate startDate, LocalDate endDate) {
+        return attendanceRepository.findByEmployee_IdAndDateBetween(employeeId, startDate, endDate);
     }
 
 }

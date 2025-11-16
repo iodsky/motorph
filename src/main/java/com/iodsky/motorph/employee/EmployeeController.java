@@ -1,10 +1,15 @@
 package com.iodsky.motorph.employee;
 
+import com.iodsky.motorph.common.PageDto;
+import com.iodsky.motorph.common.PageMapper;
 import com.iodsky.motorph.employee.model.Employee;
 import com.iodsky.motorph.employee.request.EmployeeRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -33,16 +38,16 @@ public class EmployeeController {
 
     @PreAuthorize("hasAnyRole('HR', 'IT', 'PAYROLL')")
     @GetMapping
-    public ResponseEntity<List<EmployeeDto>> getAllEmployees(
+    public ResponseEntity<PageDto<EmployeeDto>> getAllEmployees(
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit,
             @RequestParam(required = false) String departmentId,
             @RequestParam(required = false) @Positive Long supervisorId,
             @RequestParam(required = false) String status
     ) {
-        List<EmployeeDto> employees = employeeService.getAllEmployees(departmentId, supervisorId, status)
-                .stream()
-                .map(employeeMapper::toDto)
-                .toList();
-        return ResponseEntity.ok(employees);
+        Page<Employee> employees = employeeService.getAllEmployees(page, limit, departmentId, supervisorId, status);
+
+        return ResponseEntity.ok(PageMapper.map(employees, employeeMapper::toDto));
     }
 
     @GetMapping("/me")

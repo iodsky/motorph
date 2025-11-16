@@ -1,14 +1,18 @@
 package com.iodsky.motorph.payroll;
 
+import com.iodsky.motorph.common.PageDto;
+import com.iodsky.motorph.common.PageMapper;
 import com.iodsky.motorph.payroll.model.Payroll;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -43,23 +47,28 @@ public class PayrollController {
 
     @PreAuthorize("hasRole('PAYROLL')")
     @GetMapping
-    public ResponseEntity<List<PayrollDto>> getAllPayroll(
-            @RequestParam(required = false) LocalDate periodStartDate,
-            @RequestParam(required = false) LocalDate periodEndDate) {
-
-        List<PayrollDto> payroll = payrollService.getAllPayroll(periodStartDate, periodEndDate)
-                .stream().map(payrollMapper::toDto).toList();
-        return ResponseEntity.ok(payroll);
-    }
-
-    @GetMapping("/me")
-    public ResponseEntity<List<PayrollDto>> getAllEmployeePayroll(
+    public ResponseEntity<PageDto<PayrollDto>> getAllPayroll(
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit,
             @RequestParam(required = false) LocalDate periodStartDate,
             @RequestParam(required = false) LocalDate periodEndDate
     ) {
-        List<PayrollDto> payroll = payrollService.getAllEmployeePayroll(periodStartDate, periodEndDate)
-                .stream().map(payrollMapper::toDto).toList();
-        return ResponseEntity.ok(payroll);
+
+        Page<Payroll> payroll = payrollService.getAllPayroll(page, limit, periodStartDate, periodEndDate);
+
+        return ResponseEntity.ok(PageMapper.map(payroll, payrollMapper::toDto));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<PageDto<PayrollDto>> getAllEmployeePayroll(
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit,
+            @RequestParam(required = false) LocalDate periodStartDate,
+            @RequestParam(required = false) LocalDate periodEndDate
+    ) {
+        Page<Payroll> payroll = payrollService.getAllEmployeePayroll(page, limit, periodStartDate, periodEndDate);
+
+        return ResponseEntity.ok(PageMapper.map(payroll, payrollMapper::toDto));
     }
 
     @GetMapping("/{id}")

@@ -1,7 +1,12 @@
 package com.iodsky.motorph.security.user;
 
+import com.iodsky.motorph.common.PageDto;
+import com.iodsky.motorph.common.PageMapper;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,9 +31,13 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<List<UserDto>> getUsers(@RequestParam(required = false) String role) {
-        List<UserDto> list = userService.getAllUsers(role).stream().map(userMapper::toDto).toList();
-        return ResponseEntity.ok(list);
+    public ResponseEntity<PageDto<UserDto>> getUsers(
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit,
+            @RequestParam(required = false) String role
+    ) {
+        Page<User> users = userService.getAllUsers(page, limit, role);
+        return ResponseEntity.ok(PageMapper.map(users, userMapper::toDto));
     }
 
     @PostMapping("/import")

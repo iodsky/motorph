@@ -13,6 +13,9 @@ import com.iodsky.motorph.payroll.model.Benefit;
 import com.iodsky.motorph.security.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -65,17 +68,19 @@ public class EmployeeService {
         }
     }
 
-    public List<Employee> getAllEmployees(String departmentId, Long supervisorId, String status) {
+    public Page<Employee> getAllEmployees(int page, int limit, String departmentId, Long supervisorId, String status) {
+
+        Pageable pageable = PageRequest.of(page, limit);
 
         if (departmentId != null) {
-            return employeeRepository.findByEmploymentDetails_Department_Id(departmentId);
+            return employeeRepository.findByEmploymentDetails_Department_Id(departmentId, pageable);
         } else if (supervisorId != null) {
-            return employeeRepository.findByEmploymentDetails_Supervisor_Id(supervisorId);
+            return employeeRepository.findByEmploymentDetails_Supervisor_Id(supervisorId, pageable);
         } else if (status != null) {
-            return  employeeRepository.findByEmploymentDetails_Status(Status.valueOf(status.toUpperCase()));
+            return  employeeRepository.findByEmploymentDetails_Status(Status.valueOf(status.toUpperCase()), pageable);
         }
 
-        return employeeRepository.findAll();
+        return employeeRepository.findAll(pageable);
     }
 
     public Employee getAuthenticatedEmployee() {

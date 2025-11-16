@@ -12,6 +12,10 @@ import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -262,35 +266,44 @@ class AttendanceServiceTest {
     class GetAllAttendancesTests {
         @Test
         void shouldReturnAllAttendancesForSpecificDate() {
-            when(attendanceRepository.findAllByDate(TODAY)).thenReturn(List.of(attendance));
+            Pageable pageable = PageRequest.of(0, 10);
+            Page<Attendance> attendancePage = new PageImpl<>(List.of(attendance), pageable, 1);
+            when(attendanceRepository.findAllByDate(eq(TODAY), any(Pageable.class))).thenReturn(attendancePage);
 
-            List<Attendance> result = attendanceService.getAllAttendances(TODAY, null);
+            Page<Attendance> result = attendanceService.getAllAttendances(0, 10, TODAY, null);
 
-            assertEquals(1, result.size());
+            assertEquals(1, result.getTotalElements());
+            assertEquals(1, result.getContent().size());
+            verify(attendanceRepository).findAllByDate(eq(TODAY), any(Pageable.class));
         }
 
         @Test
         void shouldReturnAttendancesForDateRange() {
+            Pageable pageable = PageRequest.of(0, 10);
+            Page<Attendance> attendancePage = new PageImpl<>(List.of(attendance), pageable, 1);
             when(dateRangeResolver.resolve(any(), any()))
                     .thenReturn(new DateRange(TODAY, TODAY.plusDays(2)));
-            when(attendanceRepository.findAllByDateBetween(any(), any())).thenReturn(List.of(attendance));
+            when(attendanceRepository.findAllByDateBetween(any(), any(), any(Pageable.class))).thenReturn(attendancePage);
 
-            List<Attendance> result = attendanceService.getAllAttendances(TODAY, TODAY.plusDays(2));
+            Page<Attendance> result = attendanceService.getAllAttendances(0, 10, TODAY, TODAY.plusDays(2));
 
             assertFalse(result.isEmpty());
+            assertEquals(1, result.getContent().size());
         }
 
         @Test
         void shouldHandleSwappedDates() {
+            Pageable pageable = PageRequest.of(0, 10);
+            Page<Attendance> attendancePage = new PageImpl<>(List.of(attendance), pageable, 1);
             when(dateRangeResolver.resolve(any(), any()))
                     .thenReturn(new DateRange(TODAY, TODAY.plusDays(2)));
 
-            when(attendanceRepository.findAllByDateBetween(any(), any())).thenReturn(List.of(attendance));
+            when(attendanceRepository.findAllByDateBetween(any(), any(), any(Pageable.class))).thenReturn(attendancePage);
 
-            List<Attendance> result = attendanceService.getAllAttendances(TODAY.plusDays(2), TODAY);
+            Page<Attendance> result = attendanceService.getAllAttendances(0, 10, TODAY.plusDays(2), TODAY);
 
             assertFalse(result.isEmpty());
-            verify(attendanceRepository).findAllByDateBetween(any(LocalDate.class), any(LocalDate.class));
+            verify(attendanceRepository).findAllByDateBetween(any(LocalDate.class), any(LocalDate.class), any(Pageable.class));
         }
     }
 
@@ -299,27 +312,33 @@ class AttendanceServiceTest {
         @Test
         void shouldAllowEmployeeToGetOwnAttendances() {
             mockAuth(normalUser);
-            when(attendanceRepository.findByEmployee_IdAndDateBetween(anyLong(), any(), any()))
-                    .thenReturn(List.of(attendance));
+            Pageable pageable = PageRequest.of(0, 10);
+            Page<Attendance> attendancePage = new PageImpl<>(List.of(attendance), pageable, 1);
+            when(attendanceRepository.findByEmployee_IdAndDateBetween(anyLong(), any(), any(), any(Pageable.class)))
+                    .thenReturn(attendancePage);
             when(dateRangeResolver.resolve(any(), any()))
                     .thenReturn(new DateRange(TODAY, TODAY.plusDays(2)));
 
-            List<Attendance> result = attendanceService.getEmployeeAttendances(null, TODAY, TODAY.plusDays(1));
+            Page<Attendance> result = attendanceService.getEmployeeAttendances(0, 10, null, TODAY, TODAY.plusDays(1));
 
-            assertEquals(1, result.size());
+            assertEquals(1, result.getTotalElements());
+            assertEquals(1, result.getContent().size());
         }
 
         @Test
         void shouldAllowHrToGetAnyEmployeeAttendances() {
             mockAuth(hrUser);
-            when(attendanceRepository.findByEmployee_IdAndDateBetween(anyLong(), any(), any()))
-                    .thenReturn(List.of(attendance));
+            Pageable pageable = PageRequest.of(0, 10);
+            Page<Attendance> attendancePage = new PageImpl<>(List.of(attendance), pageable, 1);
+            when(attendanceRepository.findByEmployee_IdAndDateBetween(anyLong(), any(), any(), any(Pageable.class)))
+                    .thenReturn(attendancePage);
             when(dateRangeResolver.resolve(any(), any()))
                     .thenReturn(new DateRange(TODAY, TODAY.plusDays(2)));
 
-            List<Attendance> result = attendanceService.getEmployeeAttendances(otherEmployee.getId(), TODAY, TODAY.plusDays(1));
+            Page<Attendance> result = attendanceService.getEmployeeAttendances(0, 10, otherEmployee.getId(), TODAY, TODAY.plusDays(1));
 
-            assertEquals(1, result.size());
+            assertEquals(1, result.getTotalElements());
+            assertEquals(1, result.getContent().size());
         }
 
         @Test
@@ -327,7 +346,7 @@ class AttendanceServiceTest {
             mockAuth(normalUser);
 
             assertThrows(ForbiddenException.class,
-                    () -> attendanceService.getEmployeeAttendances(otherEmployee.getId(), TODAY, TODAY.plusDays(1)));
+                    () -> attendanceService.getEmployeeAttendances(0, 10, otherEmployee.getId(), TODAY, TODAY.plusDays(1)));
         }
 
         @Test
@@ -339,7 +358,18 @@ class AttendanceServiceTest {
             SecurityContextHolder.setContext(context);
 
             assertThrows(UnauthorizedException.class,
-                    () -> attendanceService.getEmployeeAttendances(1L, TODAY, TODAY.plusDays(1)));
+                    () -> attendanceService.getEmployeeAttendances(0, 10, 1L, TODAY, TODAY.plusDays(1)));
+        }
+
+        @Test
+        void shouldSupportNonPaginatedVersionForBackwardCompatibility() {
+            when(attendanceRepository.findByEmployee_IdAndDateBetween(anyLong(), any(), any()))
+                    .thenReturn(List.of(attendance));
+
+            List<Attendance> result = attendanceService.getEmployeeAttendances(1L, TODAY, TODAY.plusDays(1));
+
+            assertEquals(1, result.size());
+            verify(attendanceRepository).findByEmployee_IdAndDateBetween(eq(1L), eq(TODAY), eq(TODAY.plusDays(1)));
         }
     }
 

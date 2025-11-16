@@ -7,6 +7,9 @@ import com.iodsky.motorph.csvimport.CsvService;
 import com.iodsky.motorph.employee.EmployeeService;
 import com.iodsky.motorph.employee.model.Employee;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -36,16 +39,17 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new NotFoundException("User " + username + " not found"));
     }
 
-    public List<User> getAllUsers(String role) {
+    public Page<User> getAllUsers(int size, int limit, String role) {
+        Pageable pageable = PageRequest.of(size, limit);
         if (role == null) {
-            return userRepository.findAll();
+            return userRepository.findAll(pageable);
         }
 
         if (!userRoleRepository.existsByRole(role)) {
             throw new BadRequestException("Invalid " + role);
         }
 
-        return userRepository.findUserByUserRole_Role(role);
+        return userRepository.findUserByUserRole_Role(role, pageable);
     }
 
     public User createUser(UserRequest userRequest) {

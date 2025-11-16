@@ -2,6 +2,8 @@ package com.iodsky.motorph.security.user;
 
 import com.iodsky.motorph.common.exception.BadRequestException;
 import com.iodsky.motorph.common.exception.NotFoundException;
+import com.iodsky.motorph.csvimport.CsvResult;
+import com.iodsky.motorph.csvimport.CsvService;
 import com.iodsky.motorph.employee.EmployeeService;
 import com.iodsky.motorph.employee.model.Employee;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,9 +12,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,6 +35,7 @@ class UserServiceTest {
     @Mock private UserMapper userMapper;
     @Mock private EmployeeService employeeService;
     @Mock private PasswordEncoder passwordEncoder;
+    @Mock private CsvService<User, UserCsvRecord> csvService;
 
     @InjectMocks private UserService userService;
 
@@ -90,31 +100,37 @@ class UserServiceTest {
 
         @Test
         void shouldReturnAllUsersWhenRoleIsNull() {
-            when(userRepository.findAll()).thenReturn(List.of(user));
+            Pageable pageable = PageRequest.of(0, 10);
+            Page<User> userPage = new PageImpl<>(List.of(user), pageable, 1);
+            when(userRepository.findAll(any(Pageable.class))).thenReturn(userPage);
 
-            List<User> result = userService.getAllUsers(null);
+            Page<User> result = userService.getAllUsers(0, 10, null);
 
-            assertEquals(1, result.size());
-            verify(userRepository).findAll();
+            assertEquals(1, result.getTotalElements());
+            assertEquals(1, result.getContent().size());
+            verify(userRepository).findAll(any(Pageable.class));
             verifyNoInteractions(userRoleRepository);
         }
 
         @Test
         void shouldReturnUsersByRoleWhenValidRoleExists() {
+            Pageable pageable = PageRequest.of(0, 10);
+            Page<User> userPage = new PageImpl<>(List.of(user), pageable, 1);
             when(userRoleRepository.existsByRole("HR")).thenReturn(true);
-            when(userRepository.findUserByUserRole_Role("HR")).thenReturn(List.of(user));
+            when(userRepository.findUserByUserRole_Role(eq("HR"), any(Pageable.class))).thenReturn(userPage);
 
-            List<User> result = userService.getAllUsers("HR");
+            Page<User> result = userService.getAllUsers(0, 10, "HR");
 
-            assertEquals(1, result.size());
-            verify(userRepository).findUserByUserRole_Role("HR");
+            assertEquals(1, result.getTotalElements());
+            assertEquals(1, result.getContent().size());
+            verify(userRepository).findUserByUserRole_Role(eq("HR"), any(Pageable.class));
         }
 
         @Test
         void shouldThrowBadRequestWhenInvalidRoleProvided() {
             when(userRoleRepository.existsByRole("INVALID")).thenReturn(false);
 
-            assertThrows(BadRequestException.class, () -> userService.getAllUsers("INVALID"));
+            assertThrows(BadRequestException.class, () -> userService.getAllUsers(0, 10, "INVALID"));
         }
     }
 
@@ -181,6 +197,147 @@ class UserServiceTest {
             when(userRepository.save(any(User.class))).thenThrow(new RuntimeException("DB failure"));
 
             assertThrows(RuntimeException.class, () -> userService.createUser(userRequest));
+        }
+    }
+
+    @Nested
+    class GetUserRoleTests {
+
+        @Test
+        void shouldReturnRoleWhenRoleExists() {
+            when(userRoleRepository.findById("HR")).thenReturn(Optional.of(role));
+
+            UserRole result = userService.getUserRole("HR");
+
+            assertNotNull(result);
+            assertEquals("HR", result.getRole());
+            verify(userRoleRepository).findById("HR");
+        }
+
+        @Test
+        void shouldThrowBadRequestWhenRoleDoesNotExist() {
+            when(userRoleRepository.findById("INVALID")).thenReturn(Optional.empty());
+
+            BadRequestException ex = assertThrows(BadRequestException.class,
+                    () -> userService.getUserRole("INVALID"));
+
+            assertEquals("Invalid role INVALID", ex.getMessage());
+        }
+    }
+
+    @Nested
+    class ImportUsersTests {
+
+        private UserCsvRecord csvRecord;
+        private User csvUser;
+
+        @BeforeEach
+        void setUpImportTests() {
+            csvRecord = new UserCsvRecord();
+            csvRecord.setEmployeeId(1L);
+            csvRecord.setRole("HR");
+
+            csvUser = new User();
+            csvUser.setEmail("csv.user@example.com");
+            csvUser.setPassword("plainPassword");
+        }
+
+        @Test
+        void shouldImportUsersSuccessfully() throws IOException {
+            CsvResult<User, UserCsvRecord> csvResult = new CsvResult<>(csvUser, csvRecord);
+            Set<CsvResult<User, UserCsvRecord>> records = Set.of(csvResult);
+
+            MockMultipartFile file = new MockMultipartFile(
+                    "file", "users.csv", "text/csv", "csv content".getBytes());
+
+            when(csvService.parseCsv(any(InputStream.class), eq(UserCsvRecord.class))).thenReturn(records);
+            when(employeeService.getEmployeeById(1L)).thenReturn(employee);
+            when(userRoleRepository.findById("HR")).thenReturn(Optional.of(role));
+            when(passwordEncoder.encode("plainPassword")).thenReturn("encodedPassword");
+            when(userRepository.existsByEmail("csv.user@example.com")).thenReturn(false);
+            when(userRepository.saveAll(anySet())).thenReturn(List.of(csvUser));
+
+            Integer result = userService.importUsers(file);
+
+            assertEquals(1, result);
+            verify(csvService).parseCsv(any(InputStream.class), eq(UserCsvRecord.class));
+            verify(userRepository).saveAll(anySet());
+        }
+
+        @Test
+        void shouldFilterOutExistingUsers() throws IOException {
+            CsvResult<User, UserCsvRecord> csvResult = new CsvResult<>(csvUser, csvRecord);
+            Set<CsvResult<User, UserCsvRecord>> records = Set.of(csvResult);
+
+            MockMultipartFile file = new MockMultipartFile(
+                    "file", "users.csv", "text/csv", "csv content".getBytes());
+
+            when(csvService.parseCsv(any(InputStream.class), eq(UserCsvRecord.class))).thenReturn(records);
+            when(employeeService.getEmployeeById(1L)).thenReturn(employee);
+            when(userRoleRepository.findById("HR")).thenReturn(Optional.of(role));
+            when(passwordEncoder.encode(anyString())).thenReturn("encoded");
+            when(userRepository.existsByEmail("csv.user@example.com")).thenReturn(true);
+            when(userRepository.saveAll(anySet())).thenReturn(List.of());
+
+            Integer result = userService.importUsers(file);
+
+            assertEquals(0, result);
+            verify(userRepository).saveAll(argThat(set -> ((Set<?>) set).isEmpty()));
+        }
+
+        @Test
+        void shouldEncodePasswordsForImportedUsers() throws IOException {
+            CsvResult<User, UserCsvRecord> csvResult = new CsvResult<>(csvUser, csvRecord);
+            Set<CsvResult<User, UserCsvRecord>> records = Set.of(csvResult);
+
+            MockMultipartFile file = new MockMultipartFile(
+                    "file", "users.csv", "text/csv", "csv content".getBytes());
+
+            when(csvService.parseCsv(any(InputStream.class), eq(UserCsvRecord.class))).thenReturn(records);
+            when(employeeService.getEmployeeById(1L)).thenReturn(employee);
+            when(userRoleRepository.findById("HR")).thenReturn(Optional.of(role));
+            when(passwordEncoder.encode("plainPassword")).thenReturn("ENCODED_PASSWORD");
+            when(userRepository.existsByEmail(anyString())).thenReturn(false);
+            when(userRepository.saveAll(anySet())).thenReturn(List.of(csvUser));
+
+            userService.importUsers(file);
+
+            verify(passwordEncoder).encode("plainPassword");
+        }
+
+        @Test
+        void shouldThrowRuntimeExceptionOnIOError() throws IOException {
+            MockMultipartFile file = new MockMultipartFile(
+                    "file", "users.csv", "text/csv", "csv content".getBytes());
+
+            when(csvService.parseCsv(any(InputStream.class), eq(UserCsvRecord.class)))
+                    .thenThrow(new IOException("File read error"));
+
+            RuntimeException ex = assertThrows(RuntimeException.class,
+                    () -> userService.importUsers(file));
+
+            assertInstanceOf(IOException.class, ex.getCause());
+        }
+
+        @Test
+        void shouldSetEmployeeAndRoleForEachImportedUser() throws IOException {
+            CsvResult<User, UserCsvRecord> csvResult = new CsvResult<>(csvUser, csvRecord);
+            Set<CsvResult<User, UserCsvRecord>> records = Set.of(csvResult);
+
+            MockMultipartFile file = new MockMultipartFile(
+                    "file", "users.csv", "text/csv", "csv content".getBytes());
+
+            when(csvService.parseCsv(any(InputStream.class), eq(UserCsvRecord.class))).thenReturn(records);
+            when(employeeService.getEmployeeById(1L)).thenReturn(employee);
+            when(userRoleRepository.findById("HR")).thenReturn(Optional.of(role));
+            when(passwordEncoder.encode(anyString())).thenReturn("encoded");
+            when(userRepository.existsByEmail(anyString())).thenReturn(false);
+            when(userRepository.saveAll(anySet())).thenReturn(List.of(csvUser));
+
+            userService.importUsers(file);
+
+            verify(employeeService).getEmployeeById(1L);
+            verify(userRoleRepository).findById("HR");
         }
     }
 }

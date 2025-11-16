@@ -1,7 +1,12 @@
 package com.iodsky.motorph.attendance;
 
+import com.iodsky.motorph.common.PageDto;
+import com.iodsky.motorph.common.PageMapper;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,43 +33,43 @@ public class AttendanceController {
 
     @PreAuthorize("hasRole('HR')")
     @GetMapping
-    public ResponseEntity<List<AttendanceDto>> getAllAttendances(
+    public ResponseEntity<PageDto<AttendanceDto>> getAllAttendances(
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit,
             @RequestParam(required = false) LocalDate startDate,
             @RequestParam(required = false) LocalDate endDate
     ) {
-        List<AttendanceDto> attendance = attendanceService.getAllAttendances(startDate, endDate)
-                .stream()
-                .map(attendanceMapper::toDto)
-                .toList();
-        return ResponseEntity.ok(attendance);
+        Page<Attendance> attendances = attendanceService.getAllAttendances(page, limit, startDate, endDate);
+
+        return ResponseEntity.ok(PageMapper.map(attendances, attendanceMapper::toDto));
     }
 
     @GetMapping("/me")
-    public ResponseEntity<List<AttendanceDto>> getMyAttendances(
+    public ResponseEntity<PageDto<AttendanceDto>> getMyAttendances(
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit,
             @RequestParam(required = false) LocalDate startDate,
             @RequestParam(required = false) LocalDate endDate
     ) {
-        List<AttendanceDto> attendances = attendanceService
-                .getEmployeeAttendances(null, startDate, endDate)
-                .stream()
-                .map(attendanceMapper::toDto)
-                .toList();
-        return ResponseEntity.ok(attendances);
+        Page<Attendance> attendances = attendanceService
+                .getEmployeeAttendances(page, limit, null, startDate, endDate);
+
+        return ResponseEntity.ok(PageMapper.map(attendances, attendanceMapper::toDto));
     }
 
     @PreAuthorize("hasRole('HR')")
     @GetMapping("/employee/{id}")
-    public ResponseEntity<List<AttendanceDto>> getEmployeeAttendancesForHR(
+    public ResponseEntity<PageDto<AttendanceDto>> getEmployeeAttendancesForHR(
             @PathVariable Long id,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit,
             @RequestParam(required = false) LocalDate startDate,
             @RequestParam(required = false) LocalDate endDate
     ) {
-        List<AttendanceDto> attendances = attendanceService
-                .getEmployeeAttendances(id, startDate, endDate)
-                .stream()
-                .map(attendanceMapper::toDto)
-                .toList();
-        return ResponseEntity.ok(attendances);
+        Page<Attendance> attendances = attendanceService
+                .getEmployeeAttendances(page, limit, id, startDate, endDate);
+
+        return ResponseEntity.ok(PageMapper.map(attendances, attendanceMapper::toDto));
     }
 
     @PatchMapping("/{id}")
