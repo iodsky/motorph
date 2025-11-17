@@ -1,6 +1,8 @@
 package com.iodsky.motorph.employee;
 
 import com.iodsky.motorph.employee.model.Employee;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -10,11 +12,11 @@ import java.util.List;
 @Repository
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
-    List<Employee> findByEmploymentDetails_Status(Status status);
+    Page<Employee> findByEmploymentDetails_Status(Status status, Pageable pageable);
 
-    List<Employee> findByEmploymentDetails_Department_Id(String departmentId);
+    Page<Employee> findByEmploymentDetails_Department_Id(String departmentId, Pageable pageable);
 
-    List<Employee> findByEmploymentDetails_Supervisor_Id(Long supervisorId);
+    Page<Employee> findByEmploymentDetails_Supervisor_Id(Long supervisorId, Pageable pageable);
 
     @Query("""
         SELECT e.id

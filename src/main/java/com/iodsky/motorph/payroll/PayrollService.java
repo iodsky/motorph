@@ -18,6 +18,9 @@ import com.iodsky.motorph.security.user.User;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -205,26 +208,29 @@ public class PayrollService {
         return payroll;
     }
 
-    public List<Payroll> getAllPayroll(LocalDate periodStartDate, LocalDate periodEndDate) {
+    public Page<Payroll> getAllPayroll(int page, int limit, LocalDate periodStartDate, LocalDate periodEndDate) {
+        Pageable pageable = PageRequest.of(page, limit);
         DateRange dateRange = dateRangeResolver.resolve(periodStartDate, periodEndDate);
 
-        return payrollRepository.findAllByPeriodStartDateBetween(dateRange.startDate(), dateRange.endDate());
+        return payrollRepository.findAllByPeriodStartDateBetween(dateRange.startDate(), dateRange.endDate(), pageable);
     }
 
-    public List<Payroll> getAllEmployeePayroll(LocalDate periodStartDate, LocalDate periodEndDate) {
+    public Page<Payroll> getAllEmployeePayroll(int page, int limit, LocalDate periodStartDate, LocalDate periodEndDate) {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         if (!(principal instanceof User user)) {
             throw new UnauthorizedException("Authentication required");
         }
 
+        Pageable pageable = PageRequest.of(page, limit);
         DateRange range = dateRangeResolver.resolve(periodStartDate, periodEndDate);
 
         Long id = user.getEmployee().getId();
         return payrollRepository.findAllByEmployee_IdAndPeriodStartDateBetween(
                 id,
                 range.startDate(),
-                range.endDate()
+                range.endDate(),
+                pageable
         );
     }
 

@@ -20,6 +20,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -130,38 +134,49 @@ class EmployeeServiceTest {
     class GetAllEmployeesTests {
         @Test
         void shouldReturnAllEmployeesWhenNoFiltersProvided() {
-            when(employeeRepository.findAll()).thenReturn(List.of(employee));
+            Pageable pageable = PageRequest.of(0, 10);
+            Page<Employee> employeePage = new PageImpl<>(List.of(employee), pageable, 1);
+            when(employeeRepository.findAll(any(Pageable.class))).thenReturn(employeePage);
 
-            List<Employee> result = employeeService.getAllEmployees(null, null, null);
+            Page<Employee> result = employeeService.getAllEmployees(0, 10, null, null, null);
 
-            assertEquals(1, result.size());
-            verify(employeeRepository).findAll();
+            assertEquals(1, result.getTotalElements());
+            assertEquals(1, result.getContent().size());
+            verify(employeeRepository).findAll(any(Pageable.class));
         }
 
         @Test
         void shouldReturnEmployeesByDepartmentId() {
-            when(employeeRepository.findByEmploymentDetails_Department_Id("DEP001"))
-                    .thenReturn(List.of(employee));
+            Pageable pageable = PageRequest.of(0, 10);
+            Page<Employee> employeePage = new PageImpl<>(List.of(employee), pageable, 1);
+            when(employeeRepository.findByEmploymentDetails_Department_Id(eq("DEP001"), any(Pageable.class)))
+                    .thenReturn(employeePage);
 
-            List<Employee> result = employeeService.getAllEmployees("DEP001", null, null);
+            Page<Employee> result = employeeService.getAllEmployees(0, 10, "DEP001", null, null);
 
-            assertEquals(1, result.size());
+            assertEquals(1, result.getTotalElements());
+            assertEquals(1, result.getContent().size());
+            verify(employeeRepository).findByEmploymentDetails_Department_Id(eq("DEP001"), any(Pageable.class));
         }
 
         @Test
         void shouldReturnEmployeesBySupervisorId() {
-            when(employeeRepository.findByEmploymentDetails_Supervisor_Id(10L))
-                    .thenReturn(List.of(employee));
+            Pageable pageable = PageRequest.of(0, 10);
+            Page<Employee> employeePage = new PageImpl<>(List.of(employee), pageable, 1);
+            when(employeeRepository.findByEmploymentDetails_Supervisor_Id(eq(10L), any(Pageable.class)))
+                    .thenReturn(employeePage);
 
-            List<Employee> result = employeeService.getAllEmployees(null, 10L, null);
+            Page<Employee> result = employeeService.getAllEmployees(0, 10, null, 10L, null);
 
-            assertEquals(1, result.size());
+            assertEquals(1, result.getTotalElements());
+            assertEquals(1, result.getContent().size());
+            verify(employeeRepository).findByEmploymentDetails_Supervisor_Id(eq(10L), any(Pageable.class));
         }
 
         @Test
         void shouldThrowExceptionForInvalidStatusValue() {
             assertThrows(IllegalArgumentException.class,
-                    () -> employeeService.getAllEmployees(null, null, "INVALID_STATUS"));
+                    () -> employeeService.getAllEmployees(0, 10, null, null, "INVALID_STATUS"));
         }
     }
 
