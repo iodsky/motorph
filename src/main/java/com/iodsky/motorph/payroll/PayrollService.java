@@ -13,6 +13,7 @@ import com.iodsky.motorph.employee.model.Employee;
 import com.iodsky.motorph.payroll.model.Benefit;
 import com.iodsky.motorph.payroll.model.Deduction;
 import com.iodsky.motorph.payroll.model.Payroll;
+import com.iodsky.motorph.payroll.model.PayrollBenefit;
 import com.iodsky.motorph.security.user.User;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -120,6 +121,9 @@ public class PayrollService {
         // Build deduction list
         List<Deduction> deductionList = buildDeductionList(sssDeduction, philhealthDeduction, pagibigDeduction, withholdingTax);
 
+        // Build payroll benefits
+        List<PayrollBenefit> payrollBenefits = buildPayrollBenefits(benefits);
+
         // Build payroll entity
         Payroll payroll = Payroll.builder()
                 .employee(employee)
@@ -131,6 +135,7 @@ public class PayrollService {
                 .daysWorked(attendances.size())
                 .overtime(overtimeHours)
                 .grossPay(gross)
+                .benefits(payrollBenefits)
                 .totalBenefits(totalBenefits)
                 .deductions(deductionList)
                 .totalDeductions(totalDeductions)
@@ -138,6 +143,7 @@ public class PayrollService {
                 .build();
 
         deductionList.forEach(d -> d.setPayroll(payroll));
+        payrollBenefits.forEach(b -> b.setPayroll(payroll));
 
         return payroll;
     }
@@ -166,6 +172,15 @@ public class PayrollService {
                 .build());
 
         return deductions;
+    }
+
+    private List<PayrollBenefit> buildPayrollBenefits(List<Benefit> benefits) {
+        return benefits.stream()
+                .map(benefit -> PayrollBenefit.builder()
+                        .benefitType(benefit.getBenefitType())
+                        .amount(benefit.getAmount())
+                        .build())
+                .toList();
     }
 
     private Boolean payrollExistsForEmployeeAndPeriod(Long employeeId, LocalDate startDate, LocalDate endDate) {

@@ -37,6 +37,10 @@ public class Payroll {
     @JsonIgnore
     private List<Deduction> deductions;
 
+    @OneToMany(mappedBy = "payroll", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<PayrollBenefit> benefits;
+
     @Column(name = "period_start_date")
     private LocalDate periodStartDate;
 

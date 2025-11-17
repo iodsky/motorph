@@ -1,8 +1,8 @@
 package com.iodsky.motorph.payroll;
 
-import com.iodsky.motorph.payroll.model.Benefit;
 import com.iodsky.motorph.payroll.model.Deduction;
 import com.iodsky.motorph.payroll.model.Payroll;
+import com.iodsky.motorph.payroll.model.PayrollBenefit;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -54,9 +54,9 @@ public class PayrollMapper {
     }
 
     private BigDecimal getBenefitAmount(Payroll payroll, String type) {
-        return payroll.getEmployee().getCompensation().getBenefits().stream()
-                .filter(d -> d.getBenefitType().getId().equalsIgnoreCase(type))
-                .map(Benefit::getAmount)
+        return payroll.getBenefits().stream()
+                .filter(b -> b.getBenefitType().getId().equalsIgnoreCase(type))
+                .map(PayrollBenefit::getAmount)
                 .findFirst()
                 .orElse(BigDecimal.ZERO);
     }
