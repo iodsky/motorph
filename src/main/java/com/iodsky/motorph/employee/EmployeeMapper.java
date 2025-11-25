@@ -1,5 +1,6 @@
 package com.iodsky.motorph.employee;
 
+import com.iodsky.motorph.csvimport.CsvMapper;
 import com.iodsky.motorph.employee.model.Compensation;
 import com.iodsky.motorph.employee.model.Employee;
 import com.iodsky.motorph.employee.model.EmploymentDetails;
@@ -17,7 +18,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class EmployeeMapper {
+public class EmployeeMapper implements CsvMapper<Employee, EmployeeCsvRecord> {
 
     private final BenefitMapper benefitMapper;
 
@@ -150,4 +151,16 @@ public class EmployeeMapper {
         comp.getBenefits().clear();
         comp.getBenefits().addAll(benefits);
     }
+
+    @Override
+    public Employee toEntity(EmployeeCsvRecord csv) {
+        return Employee.builder()
+                .firstName(csv.getFirstName())
+                .lastName(csv.getLastName())
+                .birthday(csv.getBirthday())
+                .address(csv.getAddress())
+                .phoneNumber(csv.getPhoneNumber())
+                .build();
+    }
+
 }
