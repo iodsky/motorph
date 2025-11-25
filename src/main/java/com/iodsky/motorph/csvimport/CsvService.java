@@ -4,17 +4,15 @@ import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.bean.HeaderColumnNameMappingStrategy;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Service
 @RequiredArgsConstructor
 public class CsvService<T, K> {
 
-    final CsvMapper<T, K> csvMapper;
+    private final CsvMapper<T, K> csvMapper;
 
     final public Set<CsvResult<T, K>> parseCsv(InputStream stream, Class<K> type) throws IOException {
         try (Reader reader = new BufferedReader(new InputStreamReader(stream))) {
