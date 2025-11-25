@@ -33,13 +33,4 @@ public class UserMapper implements CsvMapper<User, UserCsvRecord> {
                 .build();
     }
 
-    @Override
-    public UserCsvRecord toCsvRecord(User user) {
-        return UserCsvRecord.builder()
-                .employeeId(user.getEmployee().getId())
-                .role(user.getUserRole().getRole())
-                .email(user.getEmail())
-                .password(user.getPassword())
-                .build();
-    }
 }
