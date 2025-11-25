@@ -1,6 +1,7 @@
 package com.iodsky.motorph.security.user;
 
 import com.iodsky.motorph.common.exception.BadRequestException;
+import com.iodsky.motorph.common.exception.CsvImportException;
 import com.iodsky.motorph.common.exception.NotFoundException;
 import com.iodsky.motorph.csvimport.CsvResult;
 import com.iodsky.motorph.csvimport.CsvService;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -306,17 +308,15 @@ class UserServiceTest {
         }
 
         @Test
-        void shouldThrowRuntimeExceptionOnIOError() throws IOException {
-            MockMultipartFile file = new MockMultipartFile(
-                    "file", "users.csv", "text/csv", "csv content".getBytes());
+        void shouldWrapIOExceptionInCsvImportException() throws IOException {
+            MultipartFile file = mock(MultipartFile.class);
+            when(file.getInputStream()).thenThrow(new IOException("File read error"));
 
-            when(csvService.parseCsv(any(InputStream.class), eq(UserCsvRecord.class)))
-                    .thenThrow(new IOException("File read error"));
-
-            RuntimeException ex = assertThrows(RuntimeException.class,
+            CsvImportException ex = assertThrows(CsvImportException.class,
                     () -> userService.importUsers(file));
 
-            assertInstanceOf(IOException.class, ex.getCause());
+            assertEquals("File read error", ex.getMessage());
+            verifyNoInteractions(csvService, employeeService, userRoleRepository, passwordEncoder, userRepository);
         }
 
         @Test
