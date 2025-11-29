@@ -47,6 +47,7 @@ motorph_api/
 │   │   │   └── security/                     # Authentication & Authorization
 │   │   └── resources/
 │   │       ├── application.yml               # Main configuration
+│   │       ├── application-prod.             # Production config
 │   │       └── application-local.yml         # Local development config
 │   └── test/                                 # Unit and integration tests
 ├── db-init/                                  # Database initialization scripts
@@ -67,13 +68,13 @@ The database schema follows a normalized relational design with the following ke
 - Primary entity containing personal information
 - Has one-to-one relationships with:
   - `GovernmentId` - SSS, PhilHealth, TIN, Pag-IBIG numbers
-  - `EmploymentDetails` - Department, position, supervisor, hire date, status
-  - `Compensation` - Salary, allowances, deductions
+  - `EmploymentDetails` - Department, position, supervisor, status
+  - `Compensation` - Salary and allowances
 
 **Attendance**
 - Tracks employee clock in/out records
 - Many-to-one relationship with Employee
-- Fields: date, time in, time out, hours worked
+- Fields: date, time in, time out, total hours, overtime
 
 **Payroll**
 - Generated payroll records for employees
@@ -94,7 +95,6 @@ The database schema follows a normalized relational design with the following ke
 
 ### 1. Employee Management
 - CRUD operations for employee records
-- Employee profile management with personal information
 - Department and position assignment
 - Supervisor relationships and hierarchies
 - Government ID tracking (SSS, PhilHealth, TIN, Pag-IBIG)
@@ -383,12 +383,12 @@ Run tests with:
 - [x] Multi-environment configuration (local/prod)
 
 ### Phase 2: AWS RDS Migration 📅
-- [ ] **AWS RDS PostgreSQL Setup**
+- [X] **AWS RDS PostgreSQL Setup**
 
 ### Phase 3: AWS EC2 Deployment 📅
-- [ ] **EC2 Instance Configuration**
-- [ ] **Traefik Reverse Proxy Setup**
-- [ ] **Deployment Pipeline**
+- [X] **EC2 Instance Configuration**
+- [X] **Traefik Reverse Proxy Setup**
+- [X] **Deployment Pipeline**
   - Deploy application via Docker Compose
   - Configure Watchtower for automatic updates
   - Set up monitoring and logging
