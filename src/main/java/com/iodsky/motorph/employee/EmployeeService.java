@@ -4,10 +4,7 @@ import com.iodsky.motorph.common.exception.CsvImportException;
 import com.iodsky.motorph.common.exception.DuplicateFieldException;
 import com.iodsky.motorph.csvimport.CsvResult;
 import com.iodsky.motorph.csvimport.CsvService;
-import com.iodsky.motorph.employee.model.Compensation;
 import com.iodsky.motorph.employee.model.Employee;
-import com.iodsky.motorph.employee.model.EmploymentDetails;
-import com.iodsky.motorph.employee.model.GovernmentId;
 import com.iodsky.motorph.employee.request.EmployeeRequest;
 import com.iodsky.motorph.common.exception.NotFoundException;
 import com.iodsky.motorph.organization.Department;
@@ -152,7 +149,7 @@ public class EmployeeService {
     @Transactional
     public Integer importEmployees(MultipartFile file) {
         try {
-            List<CsvResult<Employee, EmployeeCsvRecord>> records =
+            LinkedHashSet<CsvResult<Employee, EmployeeCsvRecord>> records =
                     employeeCsvService.parseCsv(file.getInputStream(), EmployeeCsvRecord.class);
 
             BenefitType mealBenefitType = benefitService.getBenefitTypeById("MEAL");
@@ -166,27 +163,13 @@ public class EmployeeService {
 
             Map<Employee, Long> employeeSupervisorMap = new HashMap<>();
 
-            List<Employee> employees = records.stream().map(r -> {
+            LinkedHashSet<Employee> employees = records.stream().map(r -> {
                 Employee employee = r.entity();
                 EmployeeCsvRecord csv = r.source();
 
-                GovernmentId governmentId = GovernmentId.builder()
-                        .employee(employee)
-                        .sssNumber(csv.getSssId())
-                        .philhealthNumber(csv.getPhilhealthId())
-                        .tinNumber(csv.getTinId())
-                        .pagIbigNumber(csv.getPagibigId())
-                        .build();
-                employee.setGovernmentId(governmentId);
-
                 Position position = positionMap.get(csv.getPosition());
-                EmploymentDetails employmentDetails = EmploymentDetails.builder()
-                        .employee(employee)
-                        .status(Status.valueOf(csv.getStatus().toUpperCase()))
-                        .position(position)
-                        .department(position.getDepartment())
-                        .build();
-                employee.setEmploymentDetails(employmentDetails);
+                employee.getEmploymentDetails().setPosition(position);
+                employee.getEmploymentDetails().setDepartment(position.getDepartment());
 
                 Benefit mealAllowance = Benefit.builder()
                         .benefitType(mealBenefitType)
@@ -203,20 +186,16 @@ public class EmployeeService {
                         .amount(csv.getPhoneAllowance())
                         .build();
 
-                Compensation compensation = Compensation.builder()
-                        .employee(employee)
-                        .basicSalary(csv.getBasicSalary())
-                        .semiMonthlyRate(csv.getSemiMonthlyRate())
-                        .hourlyRate(csv.getHourlyRate())
-                        .benefits(new ArrayList<>(List.of(mealAllowance, phoneAllowance, clothingAllowance)))
-                        .build();
-                employee.setCompensation(compensation);
-                compensation.getBenefits().forEach(b -> b.setCompensation(compensation));
+                employee.getCompensation().setBenefits(
+                        new ArrayList<>(List.of(mealAllowance, phoneAllowance, clothingAllowance))
+                );
+                employee.getCompensation().getBenefits()
+                        .forEach(b -> b.setCompensation(employee.getCompensation()));
 
                 employeeSupervisorMap.put(employee, csv.getSupervisorId());
 
                 return employee;
-            }).toList();
+            }).collect(Collectors.toCollection(LinkedHashSet::new));
 
             List<Employee> savedEmployees = employeeRepository.saveAll(employees);
 

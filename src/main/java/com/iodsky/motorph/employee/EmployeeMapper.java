@@ -154,13 +154,36 @@ public class EmployeeMapper implements CsvMapper<Employee, EmployeeCsvRecord> {
 
     @Override
     public Employee toEntity(EmployeeCsvRecord csv) {
-        return Employee.builder()
+        Employee employee = Employee.builder()
                 .firstName(csv.getFirstName())
                 .lastName(csv.getLastName())
                 .birthday(csv.getBirthday())
                 .address(csv.getAddress())
-                .phoneNumber(csv.getPhoneNumber())
-                .build();
-    }
+                .phoneNumber(csv.getPhoneNumber()).build();
 
+        GovernmentId governmentId = GovernmentId.builder()
+                .employee(employee)
+                .sssNumber(csv.getSssId())
+                .philhealthNumber(csv.getPhilhealthId())
+                .tinNumber(csv.getTinId())
+                .pagIbigNumber(csv.getPagibigId())
+                .build();
+        employee.setGovernmentId(governmentId);
+
+        EmploymentDetails employmentDetails = EmploymentDetails.builder()
+                .employee(employee)
+                .status(Status.valueOf(csv.getStatus().toUpperCase()))
+                .build();
+        employee.setEmploymentDetails(employmentDetails);
+
+        Compensation compensation = Compensation.builder()
+                .employee(employee)
+                .basicSalary(csv.getBasicSalary())
+                .semiMonthlyRate(csv.getSemiMonthlyRate())
+                .hourlyRate(csv.getHourlyRate())
+                .build();
+        employee.setCompensation(compensation);
+
+        return employee;
+    }
 }

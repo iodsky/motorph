@@ -247,7 +247,7 @@ class UserServiceTest {
         @Test
         void shouldImportUsersSuccessfully() throws IOException {
             CsvResult<User, UserCsvRecord> csvResult = new CsvResult<>(csvUser, csvRecord);
-            List<CsvResult<User, UserCsvRecord>> records = List.of(csvResult);
+            LinkedHashSet<CsvResult<User, UserCsvRecord>> records = new LinkedHashSet<>(Set.of(csvResult));
 
             MockMultipartFile file = new MockMultipartFile(
                     "file", "users.csv", "text/csv", "csv content".getBytes());
@@ -257,19 +257,19 @@ class UserServiceTest {
             when(userRoleRepository.findById("HR")).thenReturn(Optional.of(role));
             when(passwordEncoder.encode("plainPassword")).thenReturn("encodedPassword");
             when(userRepository.existsByEmail("csv.user@example.com")).thenReturn(false);
-            when(userRepository.saveAll(anyList())).thenReturn(List.of(csvUser));
+            when(userRepository.saveAll(anySet())).thenReturn(List.of(csvUser));
 
             Integer result = userService.importUsers(file);
 
             assertEquals(1, result);
             verify(csvService).parseCsv(any(InputStream.class), eq(UserCsvRecord.class));
-            verify(userRepository).saveAll(anyList());
+            verify(userRepository).saveAll(anySet());
         }
 
         @Test
         void shouldFilterOutExistingUsers() throws IOException {
             CsvResult<User, UserCsvRecord> csvResult = new CsvResult<>(csvUser, csvRecord);
-            List<CsvResult<User, UserCsvRecord>> records = List.of(csvResult);
+            LinkedHashSet<CsvResult<User, UserCsvRecord>> records = new LinkedHashSet<>(Set.of(csvResult));
 
             MockMultipartFile file = new MockMultipartFile(
                     "file", "users.csv", "text/csv", "csv content".getBytes());
@@ -279,18 +279,18 @@ class UserServiceTest {
             when(userRoleRepository.findById("HR")).thenReturn(Optional.of(role));
             when(passwordEncoder.encode(anyString())).thenReturn("encoded");
             when(userRepository.existsByEmail("csv.user@example.com")).thenReturn(true);
-            when(userRepository.saveAll(anyList())).thenReturn(List.of());
+            when(userRepository.saveAll(anySet())).thenReturn(List.of());
 
             Integer result = userService.importUsers(file);
 
             assertEquals(0, result);
-            verify(userRepository).saveAll(argThat(list -> ((List<?>) list).isEmpty()));
+            verify(userRepository).saveAll(argThat(set -> ((Set<?>) set).isEmpty()));
         }
 
         @Test
         void shouldEncodePasswordsForImportedUsers() throws IOException {
             CsvResult<User, UserCsvRecord> csvResult = new CsvResult<>(csvUser, csvRecord);
-            List<CsvResult<User, UserCsvRecord>> records = List.of(csvResult);
+            LinkedHashSet<CsvResult<User, UserCsvRecord>> records = new LinkedHashSet<>(Set.of(csvResult));
 
             MockMultipartFile file = new MockMultipartFile(
                     "file", "users.csv", "text/csv", "csv content".getBytes());
@@ -300,7 +300,7 @@ class UserServiceTest {
             when(userRoleRepository.findById("HR")).thenReturn(Optional.of(role));
             when(passwordEncoder.encode("plainPassword")).thenReturn("ENCODED_PASSWORD");
             when(userRepository.existsByEmail(anyString())).thenReturn(false);
-            when(userRepository.saveAll(anyList())).thenReturn(List.of(csvUser));
+            when(userRepository.saveAll(anySet())).thenReturn(List.of(csvUser));
 
             userService.importUsers(file);
 
@@ -322,7 +322,7 @@ class UserServiceTest {
         @Test
         void shouldSetEmployeeAndRoleForEachImportedUser() throws IOException {
             CsvResult<User, UserCsvRecord> csvResult = new CsvResult<>(csvUser, csvRecord);
-            List<CsvResult<User, UserCsvRecord>> records = List.of(csvResult);
+            LinkedHashSet<CsvResult<User, UserCsvRecord>> records = new LinkedHashSet<>(Set.of(csvResult));
 
             MockMultipartFile file = new MockMultipartFile(
                     "file", "users.csv", "text/csv", "csv content".getBytes());
@@ -332,7 +332,7 @@ class UserServiceTest {
             when(userRoleRepository.findById("HR")).thenReturn(Optional.of(role));
             when(passwordEncoder.encode(anyString())).thenReturn("encoded");
             when(userRepository.existsByEmail(anyString())).thenReturn(false);
-            when(userRepository.saveAll(anyList())).thenReturn(List.of(csvUser));
+            when(userRepository.saveAll(anySet())).thenReturn(List.of(csvUser));
 
             userService.importUsers(file);
 

@@ -19,9 +19,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
+
 
 @Service
 @RequiredArgsConstructor
@@ -70,10 +71,10 @@ public class UserService implements UserDetailsService {
 
     public Integer importUsers(MultipartFile file) {
         try {
-            List<CsvResult<User, UserCsvRecord>> records =
+            LinkedHashSet<CsvResult<User, UserCsvRecord>> records =
                     userCsvService.parseCsv(file.getInputStream(), UserCsvRecord.class);
 
-            List<User> users = records.stream().map(r -> {
+            LinkedHashSet<User> users = records.stream().map(r -> {
                 User user = r.entity();
                 UserCsvRecord csv = r.source();
 
@@ -88,7 +89,7 @@ public class UserService implements UserDetailsService {
                 return user;
             })
                     .filter(u -> !userRepository.existsByEmail(u.getEmail()))
-                    .toList();
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
 
             userRepository.saveAll(users);
             return users.size();
