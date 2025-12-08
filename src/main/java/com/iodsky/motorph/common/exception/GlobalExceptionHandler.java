@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -58,6 +59,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CsvImportException.class)
     public ResponseEntity<ErrorResponse> handleCsvImportException(CsvImportException ex) {
+        ErrorResponse error = new ErrorResponse(LocalDateTime.now(), 400, ex.getMessage(), null);
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
         ErrorResponse error = new ErrorResponse(LocalDateTime.now(), 400, ex.getMessage(), null);
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
