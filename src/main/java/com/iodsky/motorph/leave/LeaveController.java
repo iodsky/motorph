@@ -7,13 +7,13 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -25,9 +25,10 @@ public class LeaveController {
     private final LeaveCreditService leaveCreditService;
     private final LeaveRequestService leaveRequestService;
     private final LeaveRequestMapper leaveRequestMapper;
+    private final LeaveCreditMapper leaveCreditMapper;
 
     @PostMapping
-    public ResponseEntity<LeaveRequest> createLeave(@RequestBody @Valid LeaveRequestDto dto) {
+    public ResponseEntity<LeaveRequest> createLeave(@Valid @RequestBody LeaveRequestDto dto) {
         LeaveRequest leaveRequest = leaveService.createLeaveRequest(dto);
 
         return new ResponseEntity<>(leaveRequest, HttpStatus.CREATED);
@@ -48,6 +49,13 @@ public class LeaveController {
     public ResponseEntity<Map<String, Integer>> importLeaveCredits(@RequestPart MultipartFile file) {
         Integer count = leaveCreditService.importLeaveCredits(file);
         return new ResponseEntity<>(Map.of("recordsCreated", count), HttpStatus.OK);
+    }
+
+    @GetMapping("/credits")
+    public ResponseEntity<List<LeaveCreditDto>> getLeaveCredits() {
+        List<LeaveCreditDto> credits = leaveCreditService.getLeaveCreditsByEmployeeId()
+                .stream().map(leaveCreditMapper::toDto).toList();
+        return ResponseEntity.ok(credits);
     }
 
 }

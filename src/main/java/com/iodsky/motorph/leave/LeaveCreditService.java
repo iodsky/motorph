@@ -3,16 +3,20 @@ package com.iodsky.motorph.leave;
 import com.iodsky.motorph.common.exception.BadRequestException;
 import com.iodsky.motorph.common.exception.CsvImportException;
 import com.iodsky.motorph.common.exception.NotFoundException;
+import com.iodsky.motorph.common.exception.UnauthorizedException;
 import com.iodsky.motorph.csvimport.CsvResult;
 import com.iodsky.motorph.csvimport.CsvService;
 import com.iodsky.motorph.employee.EmployeeService;
 import com.iodsky.motorph.employee.model.Employee;
+import com.iodsky.motorph.security.user.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -24,10 +28,19 @@ public class LeaveCreditService {
     private final EmployeeService employeeService;
     private final CsvService<LeaveCredit, LeaveCreditCsvRecord> leaveCreditService;
 
-
     public LeaveCredit getLeaveCreditByEmployeeIdAndType(Long employeeId, LeaveType type) {
         return leaveCreditRepository.findByEmployee_IdAndType(employeeId, type)
                 .orElseThrow(() -> new NotFoundException("No " + type + " leave credits found for employeeId: " + employeeId));
+    }
+
+    public List<LeaveCredit> getLeaveCreditsByEmployeeId() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!(principal instanceof User user)) {
+            throw new UnauthorizedException("Authentication error");
+        }
+
+        Long employeeId = user.getEmployee().getId();
+        return leaveCreditRepository.findAllByEmployee_Id(employeeId);
     }
 
     public LeaveCredit updateLeaveCredit (UUID targetId, LeaveCredit updated) {
