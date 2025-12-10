@@ -21,17 +21,16 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class LeaveController {
 
-    private final LeaveRequestService leaveService;
     private final LeaveCreditService leaveCreditService;
     private final LeaveRequestService leaveRequestService;
     private final LeaveRequestMapper leaveRequestMapper;
     private final LeaveCreditMapper leaveCreditMapper;
 
     @PostMapping
-    public ResponseEntity<LeaveRequest> createLeave(@Valid @RequestBody LeaveRequestDto dto) {
-        LeaveRequest leaveRequest = leaveService.createLeaveRequest(dto);
+    public ResponseEntity<LeaveRequestDto> createLeave(@Valid @RequestBody LeaveRequestDto dto) {
+        LeaveRequest leaveRequest = leaveRequestService.createLeaveRequest(dto);
 
-        return new ResponseEntity<>(leaveRequest, HttpStatus.CREATED);
+        return new ResponseEntity<>(leaveRequestMapper.toDto(leaveRequest), HttpStatus.CREATED);
     }
 
     @GetMapping()
@@ -42,6 +41,13 @@ public class LeaveController {
         Page<LeaveRequest> page = leaveRequestService.getLeaveRequests(pageNum, limit);
 
         return ResponseEntity.ok(PageMapper.map(page, leaveRequestMapper::toDto));
+    }
+
+    @GetMapping("/{leaveRequestId}")
+    public ResponseEntity<LeaveRequestDto> getLeaveRequestById(@PathVariable String leaveRequestId) {
+        LeaveRequest leaveRequest = leaveRequestService.getLeaveRequestById(leaveRequestId);
+
+        return ResponseEntity.ok(leaveRequestMapper.toDto(leaveRequest));
     }
 
     @PreAuthorize("hasRole('HR')")
