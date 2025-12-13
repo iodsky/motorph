@@ -18,4 +18,13 @@ public class LeaveRequestMapper {
                 .build();
     }
 
+    public LeaveRequest updateEntity(LeaveRequest entity, LeaveRequestDto dto) {
+        entity.setNote(dto.getNote());
+        entity.setStartDate(dto.getStartDate());
+        entity.setEndDate(dto.getEndDate());
+        entity.setLeaveType(LeaveType.valueOf(dto.getLeaveType()));
+
+        return entity;
+    }
+
 }
