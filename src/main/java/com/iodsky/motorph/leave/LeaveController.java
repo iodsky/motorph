@@ -50,6 +50,15 @@ public class LeaveController {
         return ResponseEntity.ok(leaveRequestMapper.toDto(leaveRequest));
     }
 
+    @PutMapping("/{leaveRequestId}")
+    public ResponseEntity<LeaveRequestDto> updateLeaveRequest(
+            @PathVariable String leaveRequestId,
+            @Valid @RequestBody LeaveRequestDto dto) {
+        LeaveRequest leaveRequest = leaveRequestService.updateLeaveRequest(leaveRequestId, dto);
+
+        return ResponseEntity.ok(leaveRequestMapper.toDto(leaveRequest));
+    }
+
     @PreAuthorize("hasRole('HR')")
     @PatchMapping("/{leaveRequestId}")
     public ResponseEntity<LeaveRequestDto> updateLeaveStatus(
@@ -58,6 +67,12 @@ public class LeaveController {
         LeaveRequest leaveRequest = leaveRequestService.updateLeaveStatus(leaveRequestId, dto.getStatus());
 
         return ResponseEntity.ok(leaveRequestMapper.toDto(leaveRequest));
+    }
+
+    @DeleteMapping("/{leaveRequestId}")
+    public ResponseEntity<Map<String, String>> deleteLeaveRequest(@PathVariable String leaveRequestId) {
+        leaveRequestService.deleteLeaveRequest(leaveRequestId);
+        return ResponseEntity.ok(Map.of("success", "true"));
     }
 
     @PreAuthorize("hasRole('HR')")
