@@ -24,6 +24,7 @@ public class LeaveRequestService {
 
     private final LeaveRequestRepository leaveRequestRepository;
     private final LeaveCreditService leaveCreditService;
+    private final LeaveRequestMapper leaveRequestMapper;
 
     @Transactional
     public LeaveRequest createLeaveRequest(LeaveRequestDto dto) {
@@ -78,6 +79,33 @@ public class LeaveRequestService {
         return leaveRequestRepository.findAllByEmployee_Id(user.getEmployee().getId(), page);
     }
 
+    public LeaveRequest getLeaveRequestById(String leaveRequestId) {
+        return leaveRequestRepository.findById(leaveRequestId)
+                .orElseThrow(() -> new NotFoundException("Leave request " + leaveRequestId + " not found"));
+    }
+
+    public LeaveRequest updateLeaveRequest(String leaveRequestId, LeaveRequestDto dto) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!(principal instanceof User user)) {
+            throw new BadRequestException("Authentication error");
+        }
+
+        LeaveRequest entity = getLeaveRequestById(leaveRequestId);
+        if (!entity.getEmployee().getId().equals(user.getEmployee().getId())) {
+            if (!user.getUserRole().getRole().equals("HR")) {
+                throw new UnauthorizedException("You don't have the permissions to access this resource");
+            }
+        }
+
+        if (!entity.getLeaveStatus().equals(LeaveStatus.PENDING)) {
+            throw new BadRequestException("Cannot delete processed leave request");
+        }
+
+        LeaveRequest updated = leaveRequestMapper.updateEntity(entity, dto);
+
+        return leaveRequestRepository.save(updated);
+    }
+
     @Transactional
     public LeaveRequest updateLeaveStatus(String leaveRequestId, LeaveStatus newStatus) {
         LeaveRequest leaveRequest = getLeaveRequestById(leaveRequestId);
@@ -113,9 +141,24 @@ public class LeaveRequestService {
         }
     }
 
-    public LeaveRequest getLeaveRequestById(String leaveRequestId) {
-        return leaveRequestRepository.findById(leaveRequestId)
-                .orElseThrow(() -> new NotFoundException("Leave request " + leaveRequestId + " not found"));
+    public void deleteLeaveRequest(String leaveRequestId) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!(principal instanceof User user)) {
+            throw new BadRequestException("Authentication error");
+        }
+
+        LeaveRequest leaveRequest = getLeaveRequestById(leaveRequestId);
+        if (!leaveRequest.getEmployee().getId().equals(user.getEmployee().getId())) {
+            if (!user.getUserRole().getRole().equals("HR")) {
+                throw new UnauthorizedException("You don't have the permissions to access this resource");
+            }
+        }
+
+        if (!leaveRequest.getLeaveStatus().equals(LeaveStatus.PENDING)) {
+            throw new BadRequestException("Cannot delete processed leave request");
+        }
+
+        leaveRequestRepository.delete(leaveRequest);
     }
 
     private double calculateTotalDays(LocalDate startDate, LocalDate endDate) {
