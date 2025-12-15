@@ -1,4 +1,4 @@
-package com.iodsky.motorph.common;
+package com.iodsky.motorph.csvimport;
 
 import com.opencsv.bean.AbstractBeanField;
 
@@ -14,4 +14,5 @@ public class LocalDateCsvConverter extends AbstractBeanField<LocalDate, String> 
         if (value == null || value.isBlank()) return null;
         return LocalDate.parse(value.trim(), FORMATTER);
     }
+
 }

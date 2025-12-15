@@ -1,6 +1,6 @@
 package com.iodsky.motorph.employee;
 
-import com.iodsky.motorph.common.LocalDateCsvConverter;
+import com.iodsky.motorph.csvimport.LocalDateCsvConverter;
 import com.opencsv.bean.CsvBindByName;
 import com.opencsv.bean.CsvCustomBindByName;
 import lombok.*;
