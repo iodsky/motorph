@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -76,7 +77,17 @@ public class LeaveController {
     }
 
     @PreAuthorize("hasRole('HR')")
-    @PostMapping("/credits")
+    @PostMapping(value = "/credits", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<LeaveCreditDto>> initializeEmployeeLeaveCredits(@Valid @RequestBody InitializeEmployeeLeaveCreditsDto dto) {
+        List<LeaveCreditDto> leaveCredits = leaveCreditService.initializeEmployeeLeaveCredits(dto)
+                .stream()
+                .map(leaveCreditMapper::toDto)
+                .toList();
+        return new ResponseEntity<>(leaveCredits, HttpStatus.CREATED);
+    }
+
+    @PreAuthorize("hasRole('HR')")
+    @PostMapping(value = "/credits", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, Integer>> importLeaveCredits(@RequestPart MultipartFile file) {
         Integer count = leaveCreditService.importLeaveCredits(file);
         return new ResponseEntity<>(Map.of("recordsCreated", count), HttpStatus.OK);
@@ -87,6 +98,12 @@ public class LeaveController {
         List<LeaveCreditDto> credits = leaveCreditService.getLeaveCreditsByEmployeeId()
                 .stream().map(leaveCreditMapper::toDto).toList();
         return ResponseEntity.ok(credits);
+    }
+
+    @DeleteMapping("/credits/employee/{employeeId}")
+    public ResponseEntity<Map<String, String>> deleteLeaveCreditsByEmployeeId(@PathVariable Long employeeId) {
+        leaveCreditService.deleteLeaveCreditsByEmployeeId(employeeId);
+        return ResponseEntity.ok(Map.of("success", "true"));
     }
 
 }

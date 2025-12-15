@@ -9,7 +9,7 @@ import lombok.*;
 import java.util.UUID;
 
 @Entity
-@Table(name = "leave_balance")
+@Table(name = "leave_credit")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -31,6 +31,8 @@ public class LeaveCredit {
 
     @Min(value = 0, message = "Leave credits cannot be negative")
     private double credits;
+
+    private String fiscalYear;
 
     @Version
     private Long version;
