@@ -3,7 +3,7 @@ package com.iodsky.motorph.security.user;
 import lombok.Builder;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Data
@@ -14,7 +14,7 @@ public class UserDto {
    private String email;
    private Long employeeId;
    private String role;
-   private LocalDateTime createdAt;
-   private LocalDateTime updatedAt;
+   private Instant createdAt;
+   private Instant updatedAt;
 
 }

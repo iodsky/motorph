@@ -1,6 +1,5 @@
-package com.iodsky.motorph.employee.request;
+package com.iodsky.motorph.employee;
 
-import com.iodsky.motorph.employee.Status;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 

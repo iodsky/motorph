@@ -6,7 +6,7 @@ import com.iodsky.motorph.common.exception.NotFoundException;
 import com.iodsky.motorph.csvimport.CsvResult;
 import com.iodsky.motorph.csvimport.CsvService;
 import com.iodsky.motorph.employee.EmployeeService;
-import com.iodsky.motorph.employee.model.Employee;
+import com.iodsky.motorph.employee.Employee;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

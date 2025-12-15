@@ -1,7 +1,5 @@
 package com.iodsky.motorph.payroll;
 
-import com.iodsky.motorph.payroll.model.Benefit;
-import com.iodsky.motorph.payroll.model.BenefitType;
 import org.springframework.stereotype.Component;
 
 @Component

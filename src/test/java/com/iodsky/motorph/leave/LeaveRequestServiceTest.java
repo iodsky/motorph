@@ -3,7 +3,7 @@ package com.iodsky.motorph.leave;
 import com.iodsky.motorph.common.exception.BadRequestException;
 import com.iodsky.motorph.common.exception.NotFoundException;
 import com.iodsky.motorph.common.exception.UnauthorizedException;
-import com.iodsky.motorph.employee.model.Employee;
+import com.iodsky.motorph.employee.Employee;
 import com.iodsky.motorph.security.user.User;
 import com.iodsky.motorph.security.user.UserRole;
 import jakarta.persistence.OptimisticLockException;
@@ -89,12 +89,10 @@ class LeaveRequestServiceTest {
                 .id("LR-2025-001")
                 .employee(employee)
                 .leaveType(LeaveType.VACATION)
-                .requestDate(LocalDate.now())
                 .startDate(leaveRequestDto.getStartDate())
                 .endDate(leaveRequestDto.getEndDate())
                 .note(leaveRequestDto.getNote())
                 .leaveStatus(LeaveStatus.PENDING)
-                .version(0L)
                 .build();
 
         leaveCredit = LeaveCredit.builder()
@@ -102,7 +100,6 @@ class LeaveRequestServiceTest {
                 .employee(employee)
                 .type(LeaveType.VACATION)
                 .credits(10.0)
-                .version(0L)
                 .build();
     }
 

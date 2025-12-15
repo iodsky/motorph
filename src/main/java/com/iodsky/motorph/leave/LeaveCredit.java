@@ -1,7 +1,8 @@
 package com.iodsky.motorph.leave;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.iodsky.motorph.employee.model.Employee;
+import com.iodsky.motorph.common.BaseModel;
+import com.iodsky.motorph.employee.Employee;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import lombok.*;
@@ -15,7 +16,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class LeaveCredit {
+public class LeaveCredit extends BaseModel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -33,8 +34,5 @@ public class LeaveCredit {
     private double credits;
 
     private String fiscalYear;
-
-    @Version
-    private Long version;
 
 }

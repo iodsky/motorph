@@ -8,7 +8,7 @@ import com.iodsky.motorph.common.exception.UnauthorizedException;
 import com.iodsky.motorph.csvimport.CsvResult;
 import com.iodsky.motorph.csvimport.CsvService;
 import com.iodsky.motorph.employee.EmployeeService;
-import com.iodsky.motorph.employee.model.Employee;
+import com.iodsky.motorph.employee.Employee;
 import com.iodsky.motorph.security.user.User;
 import com.iodsky.motorph.security.user.UserRole;
 import org.junit.jupiter.api.BeforeEach;
@@ -72,7 +72,6 @@ class LeaveCreditServiceTest {
                 .employee(employee)
                 .type(LeaveType.VACATION)
                 .credits(10.0)
-                .version(0L)
                 .build();
 
         sickCredit = LeaveCredit.builder()
@@ -80,7 +79,6 @@ class LeaveCreditServiceTest {
                 .employee(employee)
                 .type(LeaveType.SICK)
                 .credits(5.0)
-                .version(0L)
                 .build();
     }
 
@@ -367,7 +365,6 @@ class LeaveCreditServiceTest {
                     .employee(employee)
                     .type(LeaveType.VACATION)
                     .credits(8.0)
-                    .version(1L)
                     .build();
 
             when(leaveCreditRepository.findById(creditId))

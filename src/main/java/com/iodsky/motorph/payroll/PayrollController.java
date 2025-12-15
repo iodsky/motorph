@@ -2,7 +2,6 @@ package com.iodsky.motorph.payroll;
 
 import com.iodsky.motorph.common.PageDto;
 import com.iodsky.motorph.common.PageMapper;
-import com.iodsky.motorph.payroll.model.Payroll;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;

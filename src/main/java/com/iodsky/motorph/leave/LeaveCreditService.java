@@ -4,7 +4,7 @@ import com.iodsky.motorph.common.exception.*;
 import com.iodsky.motorph.csvimport.CsvResult;
 import com.iodsky.motorph.csvimport.CsvService;
 import com.iodsky.motorph.employee.EmployeeService;
-import com.iodsky.motorph.employee.model.Employee;
+import com.iodsky.motorph.employee.Employee;
 import com.iodsky.motorph.security.user.User;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

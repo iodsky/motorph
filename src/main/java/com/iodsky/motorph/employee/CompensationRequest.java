@@ -1,4 +1,4 @@
-package com.iodsky.motorph.employee.request;
+package com.iodsky.motorph.employee;
 
 import com.iodsky.motorph.payroll.BenefitDto;
 import jakarta.validation.constraints.NotNull;

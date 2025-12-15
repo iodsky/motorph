@@ -2,7 +2,7 @@ package com.iodsky.motorph.csvimport;
 
 import com.iodsky.motorph.employee.EmployeeCsvRecord;
 import com.iodsky.motorph.employee.EmployeeMapper;
-import com.iodsky.motorph.employee.model.Employee;
+import com.iodsky.motorph.employee.Employee;
 import com.iodsky.motorph.leave.LeaveCredit;
 import com.iodsky.motorph.leave.LeaveCreditCsvRecord;
 import com.iodsky.motorph.leave.LeaveCreditMapper;

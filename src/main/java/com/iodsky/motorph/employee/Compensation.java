@@ -1,7 +1,8 @@
-package com.iodsky.motorph.employee.model;
+package com.iodsky.motorph.employee;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.iodsky.motorph.payroll.model.Benefit;
+import com.iodsky.motorph.common.BaseModel;
+import com.iodsky.motorph.payroll.Benefit;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -16,7 +17,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Compensation {
+public class Compensation extends BaseModel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

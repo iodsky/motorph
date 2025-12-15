@@ -1,9 +1,8 @@
 package com.iodsky.motorph.common.exception;
 
-import com.iodsky.motorph.common.response.ErrorResponse;
+import com.iodsky.motorph.common.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;

@@ -1,6 +1,7 @@
-package com.iodsky.motorph.employee.model;
+package com.iodsky.motorph.employee;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.iodsky.motorph.common.BaseModel;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -13,7 +14,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Employee {
+public class Employee extends BaseModel {
 
     @SequenceGenerator(
             name = "employee_id_seq",

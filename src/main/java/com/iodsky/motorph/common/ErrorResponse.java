@@ -1,4 +1,4 @@
-package com.iodsky.motorph.common.response;
+package com.iodsky.motorph.common;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;

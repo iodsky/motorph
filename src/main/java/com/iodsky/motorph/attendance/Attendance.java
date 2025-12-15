@@ -1,7 +1,8 @@
 package com.iodsky.motorph.attendance;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.iodsky.motorph.employee.model.Employee;
+import com.iodsky.motorph.common.BaseModel;
+import com.iodsky.motorph.employee.Employee;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -23,7 +24,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Attendance {
+public class Attendance extends BaseModel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

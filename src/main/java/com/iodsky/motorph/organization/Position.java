@@ -1,6 +1,7 @@
 package com.iodsky.motorph.organization;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.iodsky.motorph.common.BaseModel;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -10,7 +11,7 @@ import lombok.*;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Position {
+public class Position extends BaseModel {
 
     @Id
     @Column(length = 20)

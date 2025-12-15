@@ -2,8 +2,6 @@ package com.iodsky.motorph.employee;
 
 import com.iodsky.motorph.common.PageDto;
 import com.iodsky.motorph.common.PageMapper;
-import com.iodsky.motorph.employee.model.Employee;
-import com.iodsky.motorph.employee.request.EmployeeRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -11,6 +9,7 @@ import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -29,11 +28,18 @@ public class EmployeeController {
     private final EmployeeMapper employeeMapper;
 
     @PreAuthorize("hasRole('HR')")
-    @PostMapping
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<EmployeeDto> createEmployee(@Valid @RequestBody EmployeeRequest request) {
         Employee employee = employeeService.createEmployee(request);
         EmployeeDto dto = employeeMapper.toDto(employee);
         return new ResponseEntity<>(dto, HttpStatus.CREATED);
+    }
+
+    @PreAuthorize("hasAnyRole('HR', 'IT')")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Map<String, Integer>> importEmployees(@RequestPart("file") MultipartFile file) {
+        Integer count = employeeService.importEmployees(file);
+        return new ResponseEntity<>(Map.of("recordsCreated", count), HttpStatus.CREATED);
     }
 
     @PreAuthorize("hasAnyRole('HR', 'IT', 'PAYROLL')")
@@ -80,10 +86,4 @@ public class EmployeeController {
         return ResponseEntity.ok(Map.of("message", "Employee deleted successfully"));
     }
 
-    @PreAuthorize("hasAnyRole('HR', 'IT')")
-    @PostMapping("/import")
-    public ResponseEntity<Map<String, Integer>> importEmployees(@RequestPart("file") MultipartFile file) {
-        Integer count = employeeService.importEmployees(file);
-        return new ResponseEntity<>(Map.of("recordsCreated", count), HttpStatus.CREATED);
-    }
 }

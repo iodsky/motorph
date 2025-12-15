@@ -3,6 +3,9 @@ package com.iodsky.motorph.security.user;
 import com.iodsky.motorph.csvimport.CsvMapper;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+
 @Component
 public class UserMapper implements CsvMapper<User, UserCsvRecord> {
 

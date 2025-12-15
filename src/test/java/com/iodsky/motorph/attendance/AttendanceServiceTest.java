@@ -4,7 +4,7 @@ import com.iodsky.motorph.common.DateRange;
 import com.iodsky.motorph.common.DateRangeResolver;
 import com.iodsky.motorph.common.exception.*;
 import com.iodsky.motorph.employee.EmployeeService;
-import com.iodsky.motorph.employee.model.Employee;
+import com.iodsky.motorph.employee.Employee;
 import com.iodsky.motorph.security.user.User;
 import com.iodsky.motorph.security.user.UserRole;
 import org.junit.jupiter.api.*;

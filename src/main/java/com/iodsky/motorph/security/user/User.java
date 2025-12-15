@@ -1,15 +1,13 @@
 package com.iodsky.motorph.security.user;
 
-import com.iodsky.motorph.employee.model.Employee;
+import com.iodsky.motorph.common.BaseModel;
+import com.iodsky.motorph.employee.Employee;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -18,12 +16,10 @@ import java.util.UUID;
 @Table(name = "users")
 @Getter
 @Setter
-@ToString(exclude = {"employee", "userRole"})
-@EqualsAndHashCode(exclude = {"employee", "userRole"})
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class User implements UserDetails {
+public class User extends BaseModel implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -41,14 +37,6 @@ public class User implements UserDetails {
     @ManyToOne
     @JoinColumn(name = "role_id")
     private UserRole userRole;
-
-    @CreationTimestamp
-    @Column(name  = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -1,7 +1,6 @@
 package com.iodsky.motorph.payroll;
 
 import com.iodsky.motorph.common.exception.NotFoundException;
-import com.iodsky.motorph.payroll.model.BenefitType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

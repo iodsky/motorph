@@ -54,7 +54,6 @@ public class LeaveRequestService {
         LeaveRequest leave = LeaveRequest.builder()
                 .employee(user.getEmployee())
                 .leaveType(type)
-                .requestDate(LocalDate.now())
                 .startDate(dto.getStartDate())
                 .endDate(dto.getEndDate())
                 .note(dto.getNote())

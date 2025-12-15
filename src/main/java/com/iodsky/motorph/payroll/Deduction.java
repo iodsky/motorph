@@ -1,6 +1,7 @@
-package com.iodsky.motorph.payroll.model;
+package com.iodsky.motorph.payroll;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.iodsky.motorph.common.BaseModel;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -8,13 +9,13 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 @Entity
-@Table(name = "payroll_benefits")
+@Table(name = "deduction")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class PayrollBenefit {
+public class Deduction extends BaseModel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -26,9 +27,10 @@ public class PayrollBenefit {
     private Payroll payroll;
 
     @ManyToOne
-    @JoinColumn(name = "benefit_type_id")
-    private BenefitType benefitType;
+    @JoinColumn(name = "deduction_code")
+    private DeductionType deductionType;
 
     private BigDecimal amount;
+
 
 }

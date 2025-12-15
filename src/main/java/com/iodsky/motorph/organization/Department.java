@@ -1,5 +1,6 @@
 package com.iodsky.motorph.organization;
 
+import com.iodsky.motorph.common.BaseModel;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -13,7 +14,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Department {
+public class Department extends BaseModel {
 
     @Id
     @Column(length = 20)

@@ -1,6 +1,5 @@
 package com.iodsky.motorph.payroll;
 
-import com.iodsky.motorph.payroll.model.Payroll;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

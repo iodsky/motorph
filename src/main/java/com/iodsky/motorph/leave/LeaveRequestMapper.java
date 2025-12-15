@@ -9,7 +9,7 @@ public class LeaveRequestMapper {
         return LeaveRequestDto.builder()
                 .id(leaveRequest.getId())
                 .employeeId(leaveRequest.getEmployee().getId())
-                .requestDate(leaveRequest.getRequestDate())
+                .requestDate(leaveRequest.getCreatedAt())
                 .leaveType(leaveRequest.getLeaveType().toString())
                 .startDate(leaveRequest.getStartDate())
                 .endDate(leaveRequest.getEndDate())

@@ -1,7 +1,6 @@
 package com.iodsky.motorph.payroll;
 
 import com.iodsky.motorph.attendance.Attendance;
-import com.iodsky.motorph.payroll.model.Benefit;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;

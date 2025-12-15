@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -25,10 +26,16 @@ public class UserController {
     private final UserService userService;
     private final UserMapper userMapper;
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<UserDto> createUser(@Valid @RequestBody UserRequest userRequest) {
         User user = userService.createUser(userRequest);
         return new ResponseEntity<>(userMapper.toDto(user), HttpStatus.CREATED);
+    }
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Map<String, Integer>> importUsers(@RequestPart("file") MultipartFile file) {
+        Integer count = userService.importUsers(file);
+        return ResponseEntity.ok(Map.of("recordsCreated", count));
     }
 
     @GetMapping
@@ -41,10 +48,6 @@ public class UserController {
         return ResponseEntity.ok(PageMapper.map(users, userMapper::toDto));
     }
 
-    @PostMapping("/import")
-    public ResponseEntity<Map<String, Integer>> importUsers(@RequestPart("file") MultipartFile file) {
-        Integer count = userService.importUsers(file);
-        return ResponseEntity.ok(Map.of("recordsCreated", count));
-    }
+
 
 }

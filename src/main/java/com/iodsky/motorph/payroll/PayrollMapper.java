@@ -1,8 +1,5 @@
 package com.iodsky.motorph.payroll;
 
-import com.iodsky.motorph.payroll.model.Deduction;
-import com.iodsky.motorph.payroll.model.Payroll;
-import com.iodsky.motorph.payroll.model.PayrollBenefit;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;

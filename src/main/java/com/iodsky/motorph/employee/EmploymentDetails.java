@@ -1,7 +1,7 @@
-package com.iodsky.motorph.employee.model;
+package com.iodsky.motorph.employee;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.iodsky.motorph.employee.Status;
+import com.iodsky.motorph.common.BaseModel;
 import com.iodsky.motorph.organization.Department;
 import com.iodsky.motorph.organization.Position;
 import jakarta.persistence.*;
@@ -16,7 +16,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class EmploymentDetails {
+public class EmploymentDetails extends BaseModel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

@@ -1,10 +1,10 @@
 package com.iodsky.motorph.leave;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.iodsky.motorph.employee.model.Employee;
+import com.iodsky.motorph.common.BaseModel;
+import com.iodsky.motorph.employee.Employee;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
 
@@ -20,7 +20,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class LeaveRequest {
+public class LeaveRequest extends BaseModel {
 
     @Id
     @LeaveRequestId
@@ -34,10 +34,6 @@ public class LeaveRequest {
     @Enumerated(EnumType.STRING)
     private LeaveType leaveType;
 
-    @CreationTimestamp
-    @Column(updatable = false)
-    private LocalDate requestDate;
-
     private LocalDate startDate;
 
     private LocalDate endDate;
@@ -47,7 +43,5 @@ public class LeaveRequest {
     @Enumerated(value = EnumType.STRING)
     private LeaveStatus leaveStatus;
 
-    @Version
-    private Long version;
 
 }

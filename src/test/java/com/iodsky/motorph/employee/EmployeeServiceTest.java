@@ -2,11 +2,6 @@ package com.iodsky.motorph.employee;
 
 import com.iodsky.motorph.common.exception.DuplicateFieldException;
 import com.iodsky.motorph.common.exception.NotFoundException;
-import com.iodsky.motorph.employee.model.Compensation;
-import com.iodsky.motorph.employee.model.Employee;
-import com.iodsky.motorph.employee.model.EmploymentDetails;
-import com.iodsky.motorph.employee.request.EmployeeRequest;
-import com.iodsky.motorph.employee.request.EmploymentDetailsRequest;
 import com.iodsky.motorph.organization.Department;
 import com.iodsky.motorph.organization.DepartmentService;
 import com.iodsky.motorph.organization.Position;

@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.Instant;
 import java.time.LocalDate;
 
 @Data
@@ -23,7 +24,7 @@ public class LeaveRequestDto {
     private Long employeeId;
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private LocalDate requestDate;
+    private Instant requestDate;
 
     @NotNull(message = "Start date is required")
     @FutureOrPresent
