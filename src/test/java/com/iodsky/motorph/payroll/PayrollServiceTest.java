@@ -4,7 +4,7 @@ import com.iodsky.motorph.attendance.Attendance;
 import com.iodsky.motorph.attendance.AttendanceService;
 import com.iodsky.motorph.common.DateRange;
 import com.iodsky.motorph.common.DateRangeResolver;
-import com.iodsky.motorph.common.exception.*;
+import com.iodsky.motorph.common.exception.ApiException;
 import com.iodsky.motorph.employee.EmployeeService;
 import com.iodsky.motorph.employee.Compensation;
 import com.iodsky.motorph.employee.Employee;
@@ -423,7 +423,7 @@ class PayrollServiceTest {
             when(payrollRepository.existsByEmployee_IdAndPeriodStartDateAndPeriodEndDate(
                     anyLong(), eq(PERIOD_START), eq(PERIOD_END))).thenReturn(false);
             when(employeeService.getEmployeeById(eq(1L))).thenReturn(employee);
-            when(employeeService.getEmployeeById(eq(2L))).thenThrow(new NotFoundException("Employee not found"));
+            when(employeeService.getEmployeeById(eq(2L))).thenThrow(new ApiException(HttpStatus.NOT_FOUND, "Employee not found"));
             when(employeeService.getEmployeeById(eq(3L))).thenReturn(employee);
             when(attendanceService.getEmployeeAttendances(anyLong(), eq(PERIOD_START), eq(PERIOD_END)))
                     .thenReturn(attendances);
