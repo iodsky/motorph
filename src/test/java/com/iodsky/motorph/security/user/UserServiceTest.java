@@ -1,8 +1,7 @@
 package com.iodsky.motorph.security.user;
 
-import com.iodsky.motorph.common.exception.BadRequestException;
+import com.iodsky.motorph.common.exception.ApiException;
 import com.iodsky.motorph.common.exception.CsvImportException;
-import com.iodsky.motorph.common.exception.NotFoundException;
 import com.iodsky.motorph.csvimport.CsvResult;
 import com.iodsky.motorph.csvimport.CsvService;
 import com.iodsky.motorph.employee.EmployeeService;
@@ -17,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -83,9 +83,10 @@ class UserServiceTest {
         void shouldThrowNotFoundExceptionWhenUserDoesNotExist() {
             when(userRepository.findByEmail("missing@example.com")).thenReturn(Optional.empty());
 
-            NotFoundException ex = assertThrows(NotFoundException.class,
+            ApiException ex = assertThrows(ApiException.class,
                     () -> userService.loadUserByUsername("missing@example.com"));
 
+            assertEquals(HttpStatus.NOT_FOUND, ex.getStatus());
             assertEquals("User missing@example.com not found", ex.getMessage());
         }
 
@@ -93,7 +94,8 @@ class UserServiceTest {
         void shouldHandleNullUsernameGracefully() {
             when(userRepository.findByEmail(null)).thenReturn(Optional.empty());
 
-            assertThrows(NotFoundException.class, () -> userService.loadUserByUsername(null));
+            ApiException ex = assertThrows(ApiException.class, () -> userService.loadUserByUsername(null));
+            assertEquals(HttpStatus.NOT_FOUND, ex.getStatus());
         }
     }
 
@@ -132,7 +134,8 @@ class UserServiceTest {
         void shouldThrowBadRequestWhenInvalidRoleProvided() {
             when(userRoleRepository.existsByRole("INVALID")).thenReturn(false);
 
-            assertThrows(BadRequestException.class, () -> userService.getAllUsers(0, 10, "INVALID"));
+            ApiException ex = assertThrows(ApiException.class, () -> userService.getAllUsers(0, 10, "INVALID"));
+            assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
         }
     }
 
@@ -159,9 +162,10 @@ class UserServiceTest {
         @Test
         void shouldThrowNotFoundWhenEmployeeDoesNotExist() {
             when(userMapper.toEntity(any(UserRequest.class))).thenReturn(user);
-            when(employeeService.getEmployeeById(1L)).thenThrow(new NotFoundException("Employee not found"));
+            when(employeeService.getEmployeeById(1L)).thenThrow(new ApiException(HttpStatus.NOT_FOUND, "Employee not found"));
 
-            assertThrows(NotFoundException.class, () -> userService.createUser(userRequest));
+            ApiException ex = assertThrows(ApiException.class, () -> userService.createUser(userRequest));
+            assertEquals(HttpStatus.NOT_FOUND, ex.getStatus());
         }
 
         @Test
@@ -170,9 +174,10 @@ class UserServiceTest {
             when(employeeService.getEmployeeById(1L)).thenReturn(employee);
             when(userRoleRepository.findById("HR")).thenReturn(Optional.empty());
 
-            BadRequestException ex = assertThrows(BadRequestException.class,
+            ApiException ex = assertThrows(ApiException.class,
                     () -> userService.createUser(userRequest));
 
+            assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
             assertEquals("Invalid role HR", ex.getMessage());
         }
 
@@ -220,9 +225,10 @@ class UserServiceTest {
         void shouldThrowBadRequestWhenRoleDoesNotExist() {
             when(userRoleRepository.findById("INVALID")).thenReturn(Optional.empty());
 
-            BadRequestException ex = assertThrows(BadRequestException.class,
+            ApiException ex = assertThrows(ApiException.class,
                     () -> userService.getUserRole("INVALID"));
 
+            assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
             assertEquals("Invalid role INVALID", ex.getMessage());
         }
     }

@@ -1,7 +1,9 @@
 package com.iodsky.motorph.common.exception;
 
-public class DuplicateFieldException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class DuplicateFieldException extends ApiException {
     public DuplicateFieldException(String message) {
-        super(message);
+        super(HttpStatus.CONFLICT, message);
     }
 }

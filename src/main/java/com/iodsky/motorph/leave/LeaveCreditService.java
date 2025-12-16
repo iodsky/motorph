@@ -1,6 +1,7 @@
 package com.iodsky.motorph.leave;
 
-import com.iodsky.motorph.common.exception.*;
+import com.iodsky.motorph.common.exception.ApiException;
+import com.iodsky.motorph.common.exception.CsvImportException;
 import com.iodsky.motorph.csvimport.CsvResult;
 import com.iodsky.motorph.csvimport.CsvService;
 import com.iodsky.motorph.employee.EmployeeService;
@@ -8,6 +9,7 @@ import com.iodsky.motorph.employee.Employee;
 import com.iodsky.motorph.security.user.User;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -44,7 +46,7 @@ public class LeaveCreditService {
         final String finalFiscalYear = fiscalYear;
         boolean exists = leaveCreditRepository.existsByEmployee_IdAndFiscalYear(employee.getId(), finalFiscalYear);
         if (exists) {
-            throw new ConflictException("Leave credits already exists for employee " + employee.getId());
+            throw new ApiException(HttpStatus.CONFLICT, "Leave credits already exists for employee " + employee.getId());
         }
 
         List<LeaveCredit> leaveCredits = List.of(
@@ -73,13 +75,13 @@ public class LeaveCreditService {
 
     public LeaveCredit getLeaveCreditByEmployeeIdAndType(Long employeeId, LeaveType type) {
         return leaveCreditRepository.findByEmployee_IdAndType(employeeId, type)
-                .orElseThrow(() -> new NotFoundException("No " + type + " leave credits found for employeeId: " + employeeId));
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "No " + type + " leave credits found for employeeId: " + employeeId));
     }
 
     public List<LeaveCredit> getLeaveCreditsByEmployeeId() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (!(principal instanceof User user)) {
-            throw new UnauthorizedException("Authentication error");
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Authentication required to access this resource");
         }
 
         Long employeeId = user.getEmployee().getId();
@@ -88,7 +90,7 @@ public class LeaveCreditService {
 
     public LeaveCredit updateLeaveCredit (UUID targetId, LeaveCredit updated) {
         LeaveCredit existing = leaveCreditRepository.findById(targetId)
-                .orElseThrow(() -> new NotFoundException("Leave credit not found: " + targetId));
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Leave credit not found: " + targetId));
 
         existing.setCredits(updated.getCredits());
 
@@ -119,7 +121,7 @@ public class LeaveCreditService {
                 try {
                     type = LeaveType.valueOf(csv.getType().toUpperCase());
                 } catch (IllegalArgumentException e) {
-                    throw new BadRequestException("Invalid leave type: " + csv.getType());
+                    throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid leave type: " + csv.getType());
                 }
 
                 entity.setType(type);

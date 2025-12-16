@@ -4,10 +4,7 @@ import com.iodsky.motorph.attendance.Attendance;
 import com.iodsky.motorph.attendance.AttendanceService;
 import com.iodsky.motorph.common.DateRange;
 import com.iodsky.motorph.common.DateRangeResolver;
-import com.iodsky.motorph.common.exception.ConflictException;
-import com.iodsky.motorph.common.exception.ForbiddenException;
-import com.iodsky.motorph.common.exception.NotFoundException;
-import com.iodsky.motorph.common.exception.UnauthorizedException;
+import com.iodsky.motorph.common.exception.*;
 import com.iodsky.motorph.employee.EmployeeService;
 import com.iodsky.motorph.employee.Compensation;
 import com.iodsky.motorph.employee.Employee;
@@ -25,6 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -223,10 +221,10 @@ class PayrollServiceTest {
             when(payrollRepository.existsByEmployee_IdAndPeriodStartDateAndPeriodEndDate(
                     employee.getId(), PERIOD_START, PERIOD_END)).thenReturn(true);
 
-            ConflictException exception = assertThrows(ConflictException.class,
+            ApiException ex = assertThrows(ApiException.class,
                     () -> payrollService.createPayroll(employee.getId(), PERIOD_START, PERIOD_END, PAY_DATE));
 
-            assertTrue(exception.getMessage().contains("already exists"));
+            assertEquals(HttpStatus.CONFLICT, ex.getStatus());
             verify(payrollRepository, never()).save(any(Payroll.class));
         }
 
@@ -478,10 +476,10 @@ class PayrollServiceTest {
             payroll.setEmployee(employee);
             when(payrollRepository.findById(payroll.getId())).thenReturn(Optional.of(payroll));
 
-            // This should throw ForbiddenException because normalUser doesn't have PAYROLL role
-            // and the logic checks: !user.getUserRole().getRole().equals("PAYROLL") || !payroll.getEmployee().getId().equals(user.getEmployee().getId())
-            // Which evaluates to: !false || !true = true || false = true (forbidden)
-            assertThrows(ForbiddenException.class, () -> payrollService.getPayrollById(payroll.getId()));
+            ApiException ex = assertThrows(ApiException.class,
+                    () -> payrollService.getPayrollById(payroll.getId()));
+
+            assertEquals(HttpStatus.FORBIDDEN, ex.getStatus());
         }
 
         @Test
@@ -492,7 +490,10 @@ class PayrollServiceTest {
             when(context.getAuthentication()).thenReturn(auth);
             SecurityContextHolder.setContext(context);
 
-            assertThrows(UnauthorizedException.class, () -> payrollService.getPayrollById(payroll.getId()));
+            ApiException ex = assertThrows(ApiException.class,
+                    () -> payrollService.getPayrollById(payroll.getId()));
+
+            assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatus());
             verify(payrollRepository, never()).findById(any());
         }
 
@@ -502,7 +503,10 @@ class PayrollServiceTest {
             UUID nonExistentId = UUID.randomUUID();
             when(payrollRepository.findById(nonExistentId)).thenReturn(Optional.empty());
 
-            assertThrows(NotFoundException.class, () -> payrollService.getPayrollById(nonExistentId));
+            ApiException ex = assertThrows(ApiException.class,
+                    () -> payrollService.getPayrollById(nonExistentId));
+
+            assertEquals(HttpStatus.NOT_FOUND, ex.getStatus());
         }
 
         @Test
@@ -511,7 +515,10 @@ class PayrollServiceTest {
             payroll.setEmployee(otherEmployee);
             when(payrollRepository.findById(payroll.getId())).thenReturn(Optional.of(payroll));
 
-            assertThrows(ForbiddenException.class, () -> payrollService.getPayrollById(payroll.getId()));
+            ApiException ex = assertThrows(ApiException.class,
+                    () -> payrollService.getPayrollById(payroll.getId()));
+
+            assertEquals(HttpStatus.FORBIDDEN, ex.getStatus());
         }
 
         @Test
@@ -520,7 +527,10 @@ class PayrollServiceTest {
             payroll.setEmployee(employee);
             when(payrollRepository.findById(payroll.getId())).thenReturn(Optional.of(payroll));
 
-            assertThrows(ForbiddenException.class, () -> payrollService.getPayrollById(payroll.getId()));
+            ApiException ex = assertThrows(ApiException.class,
+                    () -> payrollService.getPayrollById(payroll.getId()));
+
+            assertEquals(HttpStatus.FORBIDDEN, ex.getStatus());
         }
     }
 
@@ -627,8 +637,10 @@ class PayrollServiceTest {
             when(context.getAuthentication()).thenReturn(auth);
             SecurityContextHolder.setContext(context);
 
-            assertThrows(UnauthorizedException.class,
+            ApiException ex = assertThrows(ApiException.class,
                     () -> payrollService.getAllEmployeePayroll(0, 10, PERIOD_START, PERIOD_END));
+            assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatus());
+
             verify(payrollRepository, never()).findAllByEmployee_IdAndPeriodStartDateBetween(
                     anyLong(), any(), any(), any());
         }

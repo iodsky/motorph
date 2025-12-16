@@ -1,8 +1,8 @@
 package com.iodsky.motorph.attendance;
 
+import com.iodsky.motorph.common.exception.ApiException;
 import com.iodsky.motorph.common.DateRange;
 import com.iodsky.motorph.common.DateRangeResolver;
-import com.iodsky.motorph.common.exception.*;
 import com.iodsky.motorph.employee.EmployeeService;
 import com.iodsky.motorph.employee.Employee;
 import com.iodsky.motorph.security.user.User;
@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -38,7 +39,7 @@ public class AttendanceService {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         if (!(principal instanceof User user)) {
-            throw new UnauthorizedException("Authentication required to access this resource");
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Authentication required to access this resource");
         }
 
         // Determine role flags
@@ -58,7 +59,7 @@ public class AttendanceService {
 
             // Authorization rule
             if (!isHr && !employeeId.equals(currentEmployeeId)) {
-                throw new ForbiddenException("You don't have the permissions to access this resource");
+                throw new ApiException(HttpStatus.FORBIDDEN, "You don't have the permissions to access this resource");
             }
         }
 
@@ -73,13 +74,13 @@ public class AttendanceService {
 
         // Prevent early clock-in
         if (clockInTime.isBefore(EARLIEST_START_SHIFT)) {
-            throw new BadRequestException("Cannot clock in before " + EARLIEST_START_SHIFT);
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Cannot clock in before " + EARLIEST_START_SHIFT);
         }
 
         // Check for existing attendance record
         Optional<Attendance> exists = attendanceRepository.findByEmployee_IdAndDate(employeeId, attendanceDate);
         if (exists.isPresent()) {
-            throw new ConflictException("Attendance already exists");
+            throw new ApiException(HttpStatus.CONFLICT, "Attendance record already exists");
         }
 
         // Build attendance
@@ -101,37 +102,37 @@ public class AttendanceService {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         if (!(principal instanceof User user)) {
-            throw new UnauthorizedException("Authentication required to access this resource");
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Authentication required to access this resource");
         }
 
         boolean isHr = "HR".equalsIgnoreCase(user.getUserRole().getRole());
 
         Attendance attendance = attendanceRepository.findById(id)
                 // Not yet clocked in
-                .orElseThrow(() -> new NotFoundException("Attendance not found with id: " + id));
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Attendance not found with id: " + id));
 
         long currentEmpId = user.getEmployee().getId();
         long employeeId = attendance.getEmployee().getId();
 
         if (!isHr && employeeId != currentEmpId) {
-            throw new ForbiddenException("You don't have the permissions to access this resource");
+            throw new ApiException(HttpStatus.FORBIDDEN, "You don't have the permissions to access this resource");
         }
 
         if (attendanceDto == null) {
             if (attendance.getTimeOut() != null && !attendance.getTimeOut().equals(LocalTime.MIN)) {
-                throw new ConflictException("You have already clocked out for the day.");
+                throw new ApiException(HttpStatus.CONFLICT, "You have already clocked out for the day.");
             }
 
             LocalTime clockOut = LocalTime.now();
             if (clockOut.isBefore(attendance.getTimeIn())) {
-                throw new BadRequestException("Clock-out time cannot be before clock-in time");
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Clock-out time cannot be before clock-in time");
             }
 
             attendance.setTimeOut(clockOut);
         }
         else {
             if (!isHr) {
-                throw new ForbiddenException("You don't have the permissions to access this resource");
+                throw new ApiException(HttpStatus.FORBIDDEN, "You don't have the permissions to access this resource");
             }
 
             if (attendanceDto.getTimeIn() != null) {
@@ -183,7 +184,7 @@ public class AttendanceService {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         if (!(principal instanceof User user)) {
-            throw new UnauthorizedException("Authentication required to access this resource");
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Authentication required to access this resource");
         }
 
         String role = user.getUserRole().getRole();
@@ -195,7 +196,7 @@ public class AttendanceService {
         }
 
         if (!isAdmin && !employeeId.equals(currentEmployeeId)) {
-            throw new ForbiddenException("You don't have permission to access this resource");
+            throw new ApiException(HttpStatus.FORBIDDEN, "You don't have permission to access this resource");
         }
 
         Pageable pageable = PageRequest.of(page, limit);

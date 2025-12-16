@@ -1,10 +1,7 @@
 package com.iodsky.motorph.leave;
 
-import com.iodsky.motorph.common.exception.BadRequestException;
-import com.iodsky.motorph.common.exception.ConflictException;
+import com.iodsky.motorph.common.exception.ApiException;
 import com.iodsky.motorph.common.exception.CsvImportException;
-import com.iodsky.motorph.common.exception.NotFoundException;
-import com.iodsky.motorph.common.exception.UnauthorizedException;
 import com.iodsky.motorph.csvimport.CsvResult;
 import com.iodsky.motorph.csvimport.CsvService;
 import com.iodsky.motorph.employee.EmployeeService;
@@ -18,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -195,11 +193,12 @@ class LeaveCreditServiceTest {
             when(leaveCreditRepository.existsByEmployee_IdAndFiscalYear(1L, "2025-2026"))
                     .thenReturn(true);
 
-            ConflictException exception = assertThrows(ConflictException.class, () ->
+            ApiException ex = assertThrows(ApiException.class, () ->
                     leaveCreditService.initializeEmployeeLeaveCredits(dto));
 
-            assertTrue(exception.getMessage().contains("Leave credits already exists"));
-            assertTrue(exception.getMessage().contains("employee 1"));
+            assertEquals(HttpStatus.CONFLICT, ex.getStatus());
+            assertTrue(ex.getMessage().contains("Leave credits already exists"));
+            assertTrue(ex.getMessage().contains("employee 1"));
 
             verify(employeeService).getEmployeeById(1L);
             verify(leaveCreditRepository).existsByEmployee_IdAndFiscalYear(1L, "2025-2026");
@@ -213,11 +212,12 @@ class LeaveCreditServiceTest {
             dto.setFiscalYear("2025-2026");
 
             when(employeeService.getEmployeeById(999L))
-                    .thenThrow(new NotFoundException("Employee not found: 999"));
+                    .thenThrow(new ApiException(HttpStatus.NOT_FOUND, "Employee not found: 999"));
 
-            assertThrows(NotFoundException.class, () ->
+            ApiException ex = assertThrows(ApiException.class, () ->
                     leaveCreditService.initializeEmployeeLeaveCredits(dto));
 
+            assertEquals(HttpStatus.NOT_FOUND, ex.getStatus());
             verify(employeeService).getEmployeeById(999L);
             verify(leaveCreditRepository, never()).existsByEmployee_IdAndFiscalYear(any(), any());
             verify(leaveCreditRepository, never()).saveAll(any());
@@ -314,10 +314,12 @@ class LeaveCreditServiceTest {
             when(leaveCreditRepository.findByEmployee_IdAndType(eq(1L), eq(LeaveType.VACATION)))
                     .thenReturn(Optional.empty());
 
-            NotFoundException exception = assertThrows(NotFoundException.class, () ->
+            ApiException ex = assertThrows(ApiException.class, () ->
                     leaveCreditService.getLeaveCreditByEmployeeIdAndType(1L, LeaveType.VACATION));
-            assertTrue(exception.getMessage().contains("VACATION"));
-            assertTrue(exception.getMessage().contains("employeeId: 1"));
+
+            assertEquals(HttpStatus.NOT_FOUND, ex.getStatus());
+            assertTrue(ex.getMessage().contains("VACATION"));
+            assertTrue(ex.getMessage().contains("employeeId: 1"));
         }
     }
 
@@ -349,8 +351,10 @@ class LeaveCreditServiceTest {
             when(context.getAuthentication()).thenReturn(authentication);
             SecurityContextHolder.setContext(context);
 
-            assertThrows(UnauthorizedException.class, () ->
+            ApiException ex = assertThrows(ApiException.class, () ->
                     leaveCreditService.getLeaveCreditsByEmployeeId());
+
+            assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatus());
         }
     }
 
@@ -389,8 +393,10 @@ class LeaveCreditServiceTest {
                     .credits(8.0)
                     .build();
 
-            assertThrows(NotFoundException.class, () ->
+            ApiException ex = assertThrows(ApiException.class, () ->
                     leaveCreditService.updateLeaveCredit(creditId, updatedCredit));
+
+            assertEquals(HttpStatus.NOT_FOUND, ex.getStatus());
         }
     }
 
@@ -463,9 +469,11 @@ class LeaveCreditServiceTest {
                     .thenReturn(csvResults);
             when(employeeService.getEmployeeById(1L)).thenReturn(employee);
 
-            BadRequestException exception = assertThrows(BadRequestException.class, () ->
+            ApiException ex = assertThrows(ApiException.class, () ->
                     leaveCreditService.importLeaveCredits(file));
-            assertTrue(exception.getMessage().contains("Invalid leave type"));
+
+            assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
+            assertTrue(ex.getMessage().contains("Invalid leave type"));
         }
 
         @Test

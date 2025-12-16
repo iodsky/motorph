@@ -1,8 +1,8 @@
 package com.iodsky.motorph.attendance;
 
+import com.iodsky.motorph.common.exception.ApiException;
 import com.iodsky.motorph.common.DateRange;
 import com.iodsky.motorph.common.DateRangeResolver;
-import com.iodsky.motorph.common.exception.*;
 import com.iodsky.motorph.employee.EmployeeService;
 import com.iodsky.motorph.employee.Employee;
 import com.iodsky.motorph.security.user.User;
@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -125,7 +126,10 @@ class AttendanceServiceTest {
             when(context.getAuthentication()).thenReturn(auth);
             SecurityContextHolder.setContext(context);
 
-            assertThrows(UnauthorizedException.class, () -> attendanceService.createAttendance(dto));
+            ApiException ex = assertThrows(ApiException.class,
+                    () -> attendanceService.createAttendance(dto));
+
+            assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatus());
         }
 
         @Test
@@ -133,7 +137,10 @@ class AttendanceServiceTest {
             mockAuth(normalUser);
             dto.setEmployeeId(otherEmployee.getId());
 
-            assertThrows(ForbiddenException.class, () -> attendanceService.createAttendance(dto));
+            ApiException ex = assertThrows(ApiException.class,
+                    () -> attendanceService.createAttendance(dto));
+
+            assertEquals(HttpStatus.FORBIDDEN, ex.getStatus());
         }
 
         @Test
@@ -141,7 +148,10 @@ class AttendanceServiceTest {
             mockAuth(normalUser);
             dto.setTimeIn(EARLIEST_SHIFT.minusMinutes(1)); // too early
 
-            assertThrows(BadRequestException.class, () -> attendanceService.createAttendance(dto));
+            ApiException ex = assertThrows(ApiException.class,
+                    () -> attendanceService.createAttendance(dto));
+
+            assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
         }
 
         @Test
@@ -149,7 +159,10 @@ class AttendanceServiceTest {
             mockAuth(normalUser);
             when(attendanceRepository.findByEmployee_IdAndDate(anyLong(), any())).thenReturn(Optional.of(attendance));
 
-            assertThrows(ConflictException.class, () -> attendanceService.createAttendance(dto));
+            ApiException ex = assertThrows(ApiException.class,
+                    () -> attendanceService.createAttendance(dto));
+
+            assertEquals(HttpStatus.CONFLICT, ex.getStatus());
         }
     }
 
@@ -194,7 +207,10 @@ class AttendanceServiceTest {
 
             when(attendanceRepository.findById(any(UUID.class))).thenReturn(Optional.of(existing));
 
-            assertThrows(ConflictException.class, () -> attendanceService.updateAttendance(existing.getId(), null));
+            ApiException ex = assertThrows(ApiException.class,
+                    () -> attendanceService.updateAttendance(existing.getId(), null));
+
+            assertEquals(HttpStatus.CONFLICT, ex.getStatus());
         }
 
         @Test
@@ -214,8 +230,11 @@ class AttendanceServiceTest {
 
             try (MockedStatic<LocalTime> mocked = mockStatic(LocalTime.class, CALLS_REAL_METHODS)) {
                 mocked.when(LocalTime::now).thenReturn(earlierTime);
-                assertThrows(BadRequestException.class,
+
+                ApiException ex = assertThrows(ApiException.class,
                         () -> attendanceService.updateAttendance(existing.getId(), null));
+
+                assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
             }
         }
 
@@ -254,7 +273,10 @@ class AttendanceServiceTest {
 
             when(attendanceRepository.findById(any(UUID.class))).thenReturn(Optional.of(existing));
 
-            assertThrows(ForbiddenException.class, () -> attendanceService.updateAttendance(existing.getId(), dto));
+            ApiException ex = assertThrows(ApiException.class,
+                    () -> attendanceService.updateAttendance(existing.getId(), dto));
+
+            assertEquals(HttpStatus.FORBIDDEN, ex.getStatus());
         }
 
         @Test
@@ -262,7 +284,10 @@ class AttendanceServiceTest {
             mockAuth(normalUser);
             when(attendanceRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
 
-            assertThrows(NotFoundException.class, () -> attendanceService.updateAttendance(UUID.randomUUID(), dto));
+            ApiException ex = assertThrows(ApiException.class,
+                    () -> attendanceService.updateAttendance(UUID.randomUUID(), dto));
+
+            assertEquals(HttpStatus.NOT_FOUND, ex.getStatus());
         }
     }
 
@@ -349,8 +374,10 @@ class AttendanceServiceTest {
         void shouldThrowForbiddenWhenNonHrRequestsOthersData() {
             mockAuth(normalUser);
 
-            assertThrows(ForbiddenException.class,
+            ApiException ex = assertThrows(ApiException.class,
                     () -> attendanceService.getEmployeeAttendances(0, 10, otherEmployee.getId(), TODAY, TODAY.plusDays(1)));
+
+            assertEquals(HttpStatus.FORBIDDEN, ex.getStatus());
         }
 
         @Test
@@ -361,8 +388,10 @@ class AttendanceServiceTest {
             when(context.getAuthentication()).thenReturn(auth);
             SecurityContextHolder.setContext(context);
 
-            assertThrows(UnauthorizedException.class,
+            ApiException ex = assertThrows(ApiException.class,
                     () -> attendanceService.getEmployeeAttendances(0, 10, 1L, TODAY, TODAY.plusDays(1)));
+
+            assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatus());
         }
 
         @Test

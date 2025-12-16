@@ -4,10 +4,7 @@ import com.iodsky.motorph.attendance.Attendance;
 import com.iodsky.motorph.attendance.AttendanceService;
 import com.iodsky.motorph.common.DateRange;
 import com.iodsky.motorph.common.DateRangeResolver;
-import com.iodsky.motorph.common.exception.ConflictException;
-import com.iodsky.motorph.common.exception.ForbiddenException;
-import com.iodsky.motorph.common.exception.NotFoundException;
-import com.iodsky.motorph.common.exception.UnauthorizedException;
+import com.iodsky.motorph.common.exception.ApiException;
 import com.iodsky.motorph.employee.EmployeeService;
 import com.iodsky.motorph.employee.Employee;
 import com.iodsky.motorph.security.user.User;
@@ -17,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -44,7 +42,8 @@ public class PayrollService {
                     "Payroll already exists for employee {} for period {} to {}. Skipping...",
                     employeeId, periodStartDate, periodEndDate
             );
-            throw new ConflictException(
+            throw new ApiException(
+                    HttpStatus.CONFLICT,
                     String.format(
                         "Payroll already exists for employee %s for period %s to %s.",
                         employeeId, periodStartDate, periodEndDate
@@ -190,15 +189,15 @@ public class PayrollService {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         if (!(principal instanceof User user)) {
-            throw new UnauthorizedException("Authentication required");
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Authentication required to access this resource");
         }
 
         Payroll payroll = payrollRepository.findById(payrollId)
-                .orElseThrow(() -> new NotFoundException("Payroll " + payrollId + " not found"));
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Payroll " + payrollId + " not found"));
 
         if (!user.getUserRole().getRole().equals("PAYROLL") ||
                 !payroll.getEmployee().getId().equals(user.getEmployee().getId())) {
-            throw new ForbiddenException("You are unauthorized to access this resource");
+            throw new ApiException(HttpStatus.FORBIDDEN, "You don't have permission to access this resource");
         }
 
         return payroll;
@@ -215,7 +214,7 @@ public class PayrollService {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         if (!(principal instanceof User user)) {
-            throw new UnauthorizedException("Authentication required");
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Authentication required to access this resource");
         }
 
         Pageable pageable = PageRequest.of(page, limit);

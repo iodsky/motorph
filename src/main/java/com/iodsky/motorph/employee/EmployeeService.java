@@ -1,10 +1,8 @@
 package com.iodsky.motorph.employee;
 
-import com.iodsky.motorph.common.exception.CsvImportException;
-import com.iodsky.motorph.common.exception.DuplicateFieldException;
+import com.iodsky.motorph.common.exception.*;
 import com.iodsky.motorph.csvimport.CsvResult;
 import com.iodsky.motorph.csvimport.CsvService;
-import com.iodsky.motorph.common.exception.NotFoundException;
 import com.iodsky.motorph.organization.Department;
 import com.iodsky.motorph.organization.DepartmentService;
 import com.iodsky.motorph.organization.Position;
@@ -18,6 +16,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -97,11 +96,11 @@ public class EmployeeService {
             return user.getEmployee();
         }
 
-        throw new NotFoundException("Authenticated user not found");
+        throw new ApiException(HttpStatus.NOT_FOUND, "Authenticated user not found");
     }
 
     public Employee getEmployeeById(Long id) {
-        return employeeRepository.findById(id).orElseThrow(() -> new NotFoundException("Employee " + id + " not found"));
+        return employeeRepository.findById(id).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Employee " + id + " not found"));
     }
 
     public Employee updateEmployeeById(Long id, EmployeeRequest request) {
@@ -136,7 +135,7 @@ public class EmployeeService {
 
     public void deleteEmployeeById(Long id) {
         employeeRepository.findById(id).ifPresentOrElse(employeeRepository::delete, () -> {
-            throw new NotFoundException("Employee " + id + " not found");
+            throw new ApiException(HttpStatus.NOT_FOUND, "Employee " + id + " not found");
         });
     }
 
@@ -209,7 +208,7 @@ public class EmployeeService {
                     if (supervisor == null) {
                         try {
                             supervisor = getEmployeeById(supervisorId);
-                        } catch (NotFoundException e) {
+                        } catch (ApiException e) {
                             continue;
                         }
                     }

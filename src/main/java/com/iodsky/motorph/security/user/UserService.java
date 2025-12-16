@@ -1,8 +1,7 @@
 package com.iodsky.motorph.security.user;
 
-import com.iodsky.motorph.common.exception.BadRequestException;
+import com.iodsky.motorph.common.exception.ApiException;
 import com.iodsky.motorph.common.exception.CsvImportException;
-import com.iodsky.motorph.common.exception.NotFoundException;
 import com.iodsky.motorph.csvimport.CsvResult;
 import com.iodsky.motorph.csvimport.CsvService;
 import com.iodsky.motorph.employee.EmployeeService;
@@ -11,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -37,7 +37,7 @@ public class UserService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findByEmail(username)
-                .orElseThrow(() -> new NotFoundException("User " + username + " not found"));
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User " + username + " not found"));
     }
 
     public Page<User> getAllUsers(int size, int limit, String role) {
@@ -47,7 +47,7 @@ public class UserService implements UserDetailsService {
         }
 
         if (!userRoleRepository.existsByRole(role)) {
-            throw new BadRequestException("Invalid " + role);
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid " + role);
         }
 
         return userRepository.findUserByUserRole_Role(role, pageable);
@@ -99,7 +99,7 @@ public class UserService implements UserDetailsService {
 
     public UserRole getUserRole(String role) {
         return userRoleRepository.findById(role)
-                .orElseThrow(() -> new BadRequestException("Invalid role " + role));
+                .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Invalid role " + role));
     }
 
 }
