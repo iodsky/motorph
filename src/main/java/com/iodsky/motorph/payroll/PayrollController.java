@@ -2,6 +2,7 @@ package com.iodsky.motorph.payroll;
 
 import com.iodsky.motorph.common.ApiResponse;
 import com.iodsky.motorph.common.BatchResponse;
+import com.iodsky.motorph.common.PaginationMeta;
 import com.iodsky.motorph.common.ResponseFactory;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -59,7 +60,7 @@ public class PayrollController {
 
         List<PayrollDto> payroll = page.getContent().stream().map(payrollMapper::toDto).toList();
 
-        return ResponseFactory.ok("Payroll retrieved successfully", payroll);
+        return ResponseFactory.ok("Payroll retrieved successfully", payroll, PaginationMeta.of(page));
     }
 
     @GetMapping("/me")
@@ -73,7 +74,7 @@ public class PayrollController {
 
         List<PayrollDto> payroll = page.getContent().stream().map(payrollMapper::toDto).toList();
 
-        return ResponseFactory.ok("Payroll retrieved successfully", payroll);
+        return ResponseFactory.ok("Payroll retrieved successfully", payroll, PaginationMeta.of(page));
     }
 
     @GetMapping("/{id}")

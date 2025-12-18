@@ -1,6 +1,7 @@
 package com.iodsky.motorph.attendance;
 
 import com.iodsky.motorph.common.ApiResponse;
+import com.iodsky.motorph.common.PaginationMeta;
 import com.iodsky.motorph.common.ResponseFactory;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -42,7 +43,7 @@ public class AttendanceController {
 
         List<AttendanceDto> data = page.getContent().stream().map(attendanceMapper::toDto).toList();
 
-        return ResponseFactory.ok("Attendances retrieved successfully", data);
+        return ResponseFactory.ok("Attendances retrieved successfully", data, PaginationMeta.of(page));
     }
 
     @GetMapping("/me")
@@ -57,7 +58,7 @@ public class AttendanceController {
 
         List<AttendanceDto> data = page.getContent().stream().map(attendanceMapper::toDto).toList();
 
-        return ResponseFactory.ok("Attendances retrieved successfully", data);
+        return ResponseFactory.ok("Attendances retrieved successfully", data, PaginationMeta.of(page));
     }
 
     @PreAuthorize("hasRole('HR')")
@@ -74,7 +75,7 @@ public class AttendanceController {
 
         List<AttendanceDto> data = page.getContent().stream().map(attendanceMapper::toDto).toList();
 
-        return ResponseFactory.ok("Attendances retrieved successfully", data);
+        return ResponseFactory.ok("Attendances retrieved successfully", data,  PaginationMeta.of(page));
     }
 
     @PatchMapping("/{id}")

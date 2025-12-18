@@ -2,6 +2,7 @@ package com.iodsky.motorph.security.user;
 
 import com.iodsky.motorph.common.ApiResponse;
 import com.iodsky.motorph.common.BatchResponse;
+import com.iodsky.motorph.common.PaginationMeta;
 import com.iodsky.motorph.common.ResponseFactory;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -46,7 +47,7 @@ public class UserController {
         Page<User> page  = userService.getAllUsers(pageNo, limit, role);
         List<UserDto> data = page.getContent().stream().map(userMapper::toDto).toList();
 
-        return ResponseFactory.ok("Users retrieved successfully", data);
+        return ResponseFactory.ok("Users retrieved successfully", data, PaginationMeta.of(page));
     }
 
 

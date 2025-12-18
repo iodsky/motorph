@@ -41,7 +41,7 @@ public class LeaveController {
 
         List<LeaveRequestDto> leaveRequests = page.getContent().stream().map(leaveRequestMapper::toDto).toList();
 
-        return ResponseFactory.ok("Leave requests retrieved successfully", leaveRequests);
+        return ResponseFactory.ok("Leave requests retrieved successfully", leaveRequests, PaginationMeta.of(page));
     }
 
     @GetMapping("/{leaveRequestId}")
