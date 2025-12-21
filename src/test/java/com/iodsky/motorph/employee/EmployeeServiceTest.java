@@ -205,7 +205,7 @@ class EmployeeServiceTest {
             ApiException ex = assertThrows(ApiException.class,
                     () -> employeeService.getAuthenticatedEmployee());
 
-            assertEquals(HttpStatus.NOT_FOUND, ex.getStatus());
+            assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatus());
         }
     }
 

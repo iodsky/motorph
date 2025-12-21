@@ -6,12 +6,12 @@ import com.iodsky.motorph.common.DateRangeResolver;
 import com.iodsky.motorph.employee.EmployeeService;
 import com.iodsky.motorph.employee.Employee;
 import com.iodsky.motorph.security.user.User;
+import com.iodsky.motorph.security.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -33,18 +33,13 @@ public class AttendanceService {
 
     private final AttendanceRepository attendanceRepository;
     private final EmployeeService employeeService;
+    private final UserService userService;
     private final DateRangeResolver dateRangeResolver;
 
     public Attendance createAttendance(AttendanceDto attendanceDto) {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userService.getAuthenticatedUser();
 
-        if (!(principal instanceof User user)) {
-            throw new ApiException(HttpStatus.UNAUTHORIZED, "Authentication required to access this resource");
-        }
-
-        // Determine role flags
-        String role = user.getUserRole().getRole().toUpperCase();
-        boolean isHr = "HR".equals(role);
+        boolean isHr = "HR".equalsIgnoreCase(user.getUserRole().getRole());
 
         // All roles may clock themselves in, but only HR can add for others
         Long currentEmployeeId = user.getEmployee().getId();
@@ -99,11 +94,7 @@ public class AttendanceService {
     }
 
     public Attendance updateAttendance(UUID id, AttendanceDto attendanceDto) {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-        if (!(principal instanceof User user)) {
-            throw new ApiException(HttpStatus.UNAUTHORIZED, "Authentication required to access this resource");
-        }
+        User user = userService.getAuthenticatedUser();
 
         boolean isHr = "HR".equalsIgnoreCase(user.getUserRole().getRole());
 
@@ -181,11 +172,7 @@ public class AttendanceService {
     }
 
     public Page<Attendance> getEmployeeAttendances(int page, int limit, Long employeeId, LocalDate startDate, LocalDate endDate) {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-        if (!(principal instanceof User user)) {
-            throw new ApiException(HttpStatus.UNAUTHORIZED, "Authentication required to access this resource");
-        }
+        User user = userService.getAuthenticatedUser();
 
         String role = user.getUserRole().getRole();
         boolean isAdmin = role.equalsIgnoreCase("HR") || role.equalsIgnoreCase("PAYROLL");

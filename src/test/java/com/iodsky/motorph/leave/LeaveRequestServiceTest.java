@@ -4,6 +4,7 @@ import com.iodsky.motorph.common.exception.ApiException;
 import com.iodsky.motorph.employee.Employee;
 import com.iodsky.motorph.security.user.User;
 import com.iodsky.motorph.security.user.UserRole;
+import com.iodsky.motorph.security.user.UserService;
 import jakarta.persistence.OptimisticLockException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -17,9 +18,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -37,6 +35,7 @@ class LeaveRequestServiceTest {
     @Mock private LeaveRequestRepository leaveRequestRepository;
     @Mock private LeaveCreditService leaveCreditService;
     @Mock private LeaveRequestMapper leaveRequestMapper;
+    @Mock private UserService userService;
     @InjectMocks private LeaveRequestService leaveRequestService;
 
     private User hrUser;
@@ -107,11 +106,7 @@ class LeaveRequestServiceTest {
 
         @Test
         void shouldCreateLeaveRequestSuccessfully() {
-            Authentication authentication = mock(Authentication.class);
-            SecurityContext context = mock(SecurityContext.class);
-            when(authentication.getPrincipal()).thenReturn(normalUser);
-            when(context.getAuthentication()).thenReturn(authentication);
-            SecurityContextHolder.setContext(context);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
 
             when(leaveCreditService.getLeaveCreditByEmployeeIdAndType(eq(1L), eq(LeaveType.VACATION)))
                     .thenReturn(leaveCredit);
@@ -133,11 +128,7 @@ class LeaveRequestServiceTest {
 
         @Test
         void shouldThrowUnauthorizedWhenPrincipalIsNotUser() {
-            Authentication authentication = mock(Authentication.class);
-            SecurityContext context = mock(SecurityContext.class);
-            when(authentication.getPrincipal()).thenReturn("anonymousUser");
-            when(context.getAuthentication()).thenReturn(authentication);
-            SecurityContextHolder.setContext(context);
+            when(userService.getAuthenticatedUser()).thenThrow(new ApiException(HttpStatus.UNAUTHORIZED, "Unauthorized"));
 
             ApiException ex = assertThrows(ApiException.class, () ->
                     leaveRequestService.createLeaveRequest(leaveRequestDto));
@@ -147,11 +138,7 @@ class LeaveRequestServiceTest {
 
         @Test
         void shouldThrowBadRequestWhenInsufficientLeaveCredits() {
-            Authentication authentication = mock(Authentication.class);
-            SecurityContext context = mock(SecurityContext.class);
-            when(authentication.getPrincipal()).thenReturn(normalUser);
-            when(context.getAuthentication()).thenReturn(authentication);
-            SecurityContextHolder.setContext(context);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
 
             leaveCredit.setCredits(2.0); // Only 2 days available, but 4 days required
             when(leaveCreditService.getLeaveCreditByEmployeeIdAndType(eq(1L), eq(LeaveType.VACATION)))
@@ -170,11 +157,7 @@ class LeaveRequestServiceTest {
 
         @Test
         void shouldThrowBadRequestWhenStartDateIsAfterEndDate() {
-            Authentication authentication = mock(Authentication.class);
-            SecurityContext context = mock(SecurityContext.class);
-            when(authentication.getPrincipal()).thenReturn(normalUser);
-            when(context.getAuthentication()).thenReturn(authentication);
-            SecurityContextHolder.setContext(context);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
 
             leaveRequestDto.setStartDate(LocalDate.of(2025, 12, 20));
             leaveRequestDto.setEndDate(LocalDate.of(2025, 12, 15));
@@ -187,11 +170,7 @@ class LeaveRequestServiceTest {
 
         @Test
         void shouldThrowBadRequestWhenStartDateIsWeekend() {
-            Authentication authentication = mock(Authentication.class);
-            SecurityContext context = mock(SecurityContext.class);
-            when(authentication.getPrincipal()).thenReturn(normalUser);
-            when(context.getAuthentication()).thenReturn(authentication);
-            SecurityContextHolder.setContext(context);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
 
             leaveRequestDto.setStartDate(LocalDate.of(2025, 12, 13)); // Saturday
             leaveRequestDto.setEndDate(LocalDate.of(2025, 12, 16));
@@ -205,11 +184,7 @@ class LeaveRequestServiceTest {
 
         @Test
         void shouldThrowBadRequestWhenEndDateIsWeekend() {
-            Authentication authentication = mock(Authentication.class);
-            SecurityContext context = mock(SecurityContext.class);
-            when(authentication.getPrincipal()).thenReturn(normalUser);
-            when(context.getAuthentication()).thenReturn(authentication);
-            SecurityContextHolder.setContext(context);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
 
             leaveRequestDto.setStartDate(LocalDate.of(2025, 12, 16));
             leaveRequestDto.setEndDate(LocalDate.of(2025, 12, 20)); // Saturday
@@ -223,11 +198,7 @@ class LeaveRequestServiceTest {
 
         @Test
         void shouldThrowBadRequestWhenDuplicateLeaveRequest() {
-            Authentication authentication = mock(Authentication.class);
-            SecurityContext context = mock(SecurityContext.class);
-            when(authentication.getPrincipal()).thenReturn(normalUser);
-            when(context.getAuthentication()).thenReturn(authentication);
-            SecurityContextHolder.setContext(context);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
 
             when(leaveRequestRepository.existsByEmployee_IdAndStartDateAndEndDate(
                     eq(1L), any(), any()))
@@ -242,11 +213,7 @@ class LeaveRequestServiceTest {
 
         @Test
         void shouldThrowBadRequestWhenOverlappingLeaveExists() {
-            Authentication authentication = mock(Authentication.class);
-            SecurityContext context = mock(SecurityContext.class);
-            when(authentication.getPrincipal()).thenReturn(normalUser);
-            when(context.getAuthentication()).thenReturn(authentication);
-            SecurityContextHolder.setContext(context);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
 
             when(leaveRequestRepository.existsByEmployee_IdAndStartDateAndEndDate(eq(1L), any(), any()))
                     .thenReturn(false);
@@ -263,11 +230,7 @@ class LeaveRequestServiceTest {
 
         @Test
         void shouldThrowBadRequestWhenInvalidLeaveType() {
-            Authentication authentication = mock(Authentication.class);
-            SecurityContext context = mock(SecurityContext.class);
-            when(authentication.getPrincipal()).thenReturn(normalUser);
-            when(context.getAuthentication()).thenReturn(authentication);
-            SecurityContextHolder.setContext(context);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
 
             leaveRequestDto.setLeaveType("INVALID_TYPE");
 
@@ -284,11 +247,7 @@ class LeaveRequestServiceTest {
 
         @Test
         void shouldReturnAllLeaveRequestsWhenUserIsHR() {
-            Authentication authentication = mock(Authentication.class);
-            SecurityContext context = mock(SecurityContext.class);
-            when(authentication.getPrincipal()).thenReturn(hrUser);
-            when(context.getAuthentication()).thenReturn(authentication);
-            SecurityContextHolder.setContext(context);
+            when(userService.getAuthenticatedUser()).thenReturn(hrUser);
 
             Pageable pageable = PageRequest.of(0, 10);
             Page<LeaveRequest> page = new PageImpl<>(List.of(leaveRequest), pageable, 1);
@@ -302,11 +261,7 @@ class LeaveRequestServiceTest {
 
         @Test
         void shouldReturnEmployeeLeaveRequestsWhenUserIsNotHR() {
-            Authentication authentication = mock(Authentication.class);
-            SecurityContext context = mock(SecurityContext.class);
-            when(authentication.getPrincipal()).thenReturn(normalUser);
-            when(context.getAuthentication()).thenReturn(authentication);
-            SecurityContextHolder.setContext(context);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
 
             Pageable pageable = PageRequest.of(0, 10);
             Page<LeaveRequest> page = new PageImpl<>(List.of(leaveRequest), pageable, 1);
@@ -321,11 +276,7 @@ class LeaveRequestServiceTest {
 
         @Test
         void shouldThrowUnauthorizedWhenPrincipalIsNotUser() {
-            Authentication authentication = mock(Authentication.class);
-            SecurityContext context = mock(SecurityContext.class);
-            when(authentication.getPrincipal()).thenReturn("anonymousUser");
-            when(context.getAuthentication()).thenReturn(authentication);
-            SecurityContextHolder.setContext(context);
+            when(userService.getAuthenticatedUser()).thenThrow(new ApiException(HttpStatus.UNAUTHORIZED, "Unauthorized"));
 
             ApiException ex = assertThrows(ApiException.class, () ->
                     leaveRequestService.getLeaveRequests(0, 10));
@@ -366,11 +317,7 @@ class LeaveRequestServiceTest {
 
         @Test
         void shouldUpdateLeaveRequestSuccessfully() {
-            Authentication authentication = mock(Authentication.class);
-            SecurityContext context = mock(SecurityContext.class);
-            when(authentication.getPrincipal()).thenReturn(normalUser);
-            when(context.getAuthentication()).thenReturn(authentication);
-            SecurityContextHolder.setContext(context);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
 
             when(leaveRequestRepository.findById("LR-2025-001"))
                     .thenReturn(Optional.of(leaveRequest));
@@ -386,11 +333,7 @@ class LeaveRequestServiceTest {
 
         @Test
         void shouldAllowHRToUpdateOtherEmployeeLeaveRequest() {
-            Authentication authentication = mock(Authentication.class);
-            SecurityContext context = mock(SecurityContext.class);
-            when(authentication.getPrincipal()).thenReturn(hrUser);
-            when(context.getAuthentication()).thenReturn(authentication);
-            SecurityContextHolder.setContext(context);
+            when(userService.getAuthenticatedUser()).thenReturn(hrUser);
 
             leaveRequest.setEmployee(otherEmployee);
             when(leaveRequestRepository.findById("LR-2025-001"))
@@ -407,11 +350,7 @@ class LeaveRequestServiceTest {
 
         @Test
         void shouldThrowForbiddenWhenNonHRUpdatesOtherEmployeeRequest() {
-            Authentication authentication = mock(Authentication.class);
-            SecurityContext context = mock(SecurityContext.class);
-            when(authentication.getPrincipal()).thenReturn(normalUser);
-            when(context.getAuthentication()).thenReturn(authentication);
-            SecurityContextHolder.setContext(context);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
 
             leaveRequest.setEmployee(otherEmployee);
             when(leaveRequestRepository.findById("LR-2025-001"))
@@ -425,11 +364,7 @@ class LeaveRequestServiceTest {
 
         @Test
         void shouldThrowBadRequestWhenUpdatingProcessedRequest() {
-            Authentication authentication = mock(Authentication.class);
-            SecurityContext context = mock(SecurityContext.class);
-            when(authentication.getPrincipal()).thenReturn(normalUser);
-            when(context.getAuthentication()).thenReturn(authentication);
-            SecurityContextHolder.setContext(context);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
 
             leaveRequest.setLeaveStatus(LeaveStatus.APPROVED);
             when(leaveRequestRepository.findById("LR-2025-001"))
@@ -528,11 +463,7 @@ class LeaveRequestServiceTest {
 
         @Test
         void shouldDeleteLeaveRequestSuccessfully() {
-            Authentication authentication = mock(Authentication.class);
-            SecurityContext context = mock(SecurityContext.class);
-            when(authentication.getPrincipal()).thenReturn(normalUser);
-            when(context.getAuthentication()).thenReturn(authentication);
-            SecurityContextHolder.setContext(context);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
 
             when(leaveRequestRepository.findById("LR-2025-001"))
                     .thenReturn(Optional.of(leaveRequest));
@@ -544,11 +475,7 @@ class LeaveRequestServiceTest {
 
         @Test
         void shouldAllowHRToDeleteOtherEmployeeLeaveRequest() {
-            Authentication authentication = mock(Authentication.class);
-            SecurityContext context = mock(SecurityContext.class);
-            when(authentication.getPrincipal()).thenReturn(hrUser);
-            when(context.getAuthentication()).thenReturn(authentication);
-            SecurityContextHolder.setContext(context);
+            when(userService.getAuthenticatedUser()).thenReturn(hrUser);
 
             leaveRequest.setEmployee(otherEmployee);
             when(leaveRequestRepository.findById("LR-2025-001"))
@@ -561,11 +488,7 @@ class LeaveRequestServiceTest {
 
         @Test
         void shouldThrowForbiddenWhenNonHRDeletesOtherEmployeeRequest() {
-            Authentication authentication = mock(Authentication.class);
-            SecurityContext context = mock(SecurityContext.class);
-            when(authentication.getPrincipal()).thenReturn(normalUser);
-            when(context.getAuthentication()).thenReturn(authentication);
-            SecurityContextHolder.setContext(context);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
 
             leaveRequest.setEmployee(otherEmployee);
             when(leaveRequestRepository.findById("LR-2025-001"))
@@ -579,11 +502,7 @@ class LeaveRequestServiceTest {
 
         @Test
         void shouldThrowBadRequestWhenDeletingProcessedRequest() {
-            Authentication authentication = mock(Authentication.class);
-            SecurityContext context = mock(SecurityContext.class);
-            when(authentication.getPrincipal()).thenReturn(normalUser);
-            when(context.getAuthentication()).thenReturn(authentication);
-            SecurityContextHolder.setContext(context);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
 
             leaveRequest.setLeaveStatus(LeaveStatus.APPROVED);
             when(leaveRequestRepository.findById("LR-2025-001"))

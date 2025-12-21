@@ -7,6 +7,7 @@ import com.iodsky.motorph.employee.EmployeeService;
 import com.iodsky.motorph.employee.Employee;
 import com.iodsky.motorph.security.user.User;
 import com.iodsky.motorph.security.user.UserRole;
+import com.iodsky.motorph.security.user.UserService;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
@@ -32,6 +33,7 @@ class AttendanceServiceTest {
 
     @Mock private AttendanceRepository attendanceRepository;
     @Mock private EmployeeService employeeService;
+    @Mock private UserService userService;
     @Mock private DateRangeResolver dateRangeResolver;
     @InjectMocks private AttendanceService attendanceService;
 
@@ -81,19 +83,11 @@ class AttendanceServiceTest {
         SecurityContextHolder.clearContext();
     }
 
-    private void mockAuth(User user) {
-        Authentication auth = mock(Authentication.class);
-        SecurityContext context = mock(SecurityContext.class);
-        when(auth.getPrincipal()).thenReturn(user);
-        when(context.getAuthentication()).thenReturn(auth);
-        SecurityContextHolder.setContext(context);
-    }
-
     @Nested
     class CreateAttendanceTests {
         @Test
         void shouldCreateAttendanceSuccessfullyForSelf() {
-            mockAuth(normalUser);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
             when(attendanceRepository.findByEmployee_IdAndDate(anyLong(), any())).thenReturn(Optional.empty());
             when(employeeService.getEmployeeById(anyLong())).thenReturn(currentEmployee);
             when(attendanceRepository.save(any())).thenReturn(attendance);
@@ -106,7 +100,7 @@ class AttendanceServiceTest {
 
         @Test
         void shouldAllowHrToCreateAttendanceForOthers() {
-            mockAuth(hrUser);
+            when(userService.getAuthenticatedUser()).thenReturn(hrUser);
             dto.setEmployeeId(otherEmployee.getId());
             when(attendanceRepository.findByEmployee_IdAndDate(anyLong(), any())).thenReturn(Optional.empty());
             when(employeeService.getEmployeeById(anyLong())).thenReturn(otherEmployee);
@@ -120,11 +114,7 @@ class AttendanceServiceTest {
 
         @Test
         void shouldThrowUnauthorizedWhenPrincipalIsNotUser() {
-            Authentication auth = mock(Authentication.class);
-            SecurityContext context = mock(SecurityContext.class);
-            when(auth.getPrincipal()).thenReturn("anonymousUser");
-            when(context.getAuthentication()).thenReturn(auth);
-            SecurityContextHolder.setContext(context);
+            when(userService.getAuthenticatedUser()).thenThrow(new ApiException(HttpStatus.UNAUTHORIZED, "Unauthorized"));
 
             ApiException ex = assertThrows(ApiException.class,
                     () -> attendanceService.createAttendance(dto));
@@ -134,7 +124,7 @@ class AttendanceServiceTest {
 
         @Test
         void shouldThrowForbiddenWhenNonHrCreatesForOthers() {
-            mockAuth(normalUser);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
             dto.setEmployeeId(otherEmployee.getId());
 
             ApiException ex = assertThrows(ApiException.class,
@@ -145,7 +135,7 @@ class AttendanceServiceTest {
 
         @Test
         void shouldThrowBadRequestWhenClockInTooEarly() {
-            mockAuth(normalUser);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
             dto.setTimeIn(EARLIEST_SHIFT.minusMinutes(1)); // too early
 
             ApiException ex = assertThrows(ApiException.class,
@@ -156,7 +146,7 @@ class AttendanceServiceTest {
 
         @Test
         void shouldThrowConflictWhenAttendanceAlreadyExists() {
-            mockAuth(normalUser);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
             when(attendanceRepository.findByEmployee_IdAndDate(anyLong(), any())).thenReturn(Optional.of(attendance));
 
             ApiException ex = assertThrows(ApiException.class,
@@ -170,7 +160,7 @@ class AttendanceServiceTest {
     class UpdateAttendanceTests {
         @Test
         void shouldAllowEmployeeToClockOutSuccessfully() {
-            mockAuth(normalUser);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
             Attendance existing = Attendance.builder()
                     .id(UUID.randomUUID())
                     .employee(currentEmployee)
@@ -196,7 +186,7 @@ class AttendanceServiceTest {
 
         @Test
         void shouldThrowConflictWhenAlreadyClockedOut() {
-            mockAuth(normalUser);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
             Attendance existing = Attendance.builder()
                     .id(UUID.randomUUID())
                     .employee(currentEmployee)
@@ -215,7 +205,7 @@ class AttendanceServiceTest {
 
         @Test
         void shouldThrowBadRequestWhenClockOutBeforeTimeIn() {
-            mockAuth(normalUser);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
             Attendance existing = Attendance.builder()
                     .id(UUID.randomUUID())
                     .employee(currentEmployee)
@@ -240,7 +230,7 @@ class AttendanceServiceTest {
 
         @Test
         void shouldAllowHrToUpdateAttendanceManually() {
-            mockAuth(hrUser);
+            when(userService.getAuthenticatedUser()).thenReturn(hrUser);
             Attendance existing = Attendance.builder()
                     .id(UUID.randomUUID())
                     .employee(currentEmployee)
@@ -262,7 +252,7 @@ class AttendanceServiceTest {
 
         @Test
         void shouldThrowForbiddenWhenNonHrTriesToEditAttendanceManually() {
-            mockAuth(normalUser);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
             Attendance existing = Attendance.builder()
                     .id(UUID.randomUUID())
                     .employee(currentEmployee)
@@ -281,7 +271,7 @@ class AttendanceServiceTest {
 
         @Test
         void shouldThrowNotFoundWhenAttendanceDoesNotExist() {
-            mockAuth(normalUser);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
             when(attendanceRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
 
             ApiException ex = assertThrows(ApiException.class,
@@ -340,7 +330,7 @@ class AttendanceServiceTest {
     class GetEmployeeAttendancesTests {
         @Test
         void shouldAllowEmployeeToGetOwnAttendances() {
-            mockAuth(normalUser);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
             Pageable pageable = PageRequest.of(0, 10);
             Page<Attendance> attendancePage = new PageImpl<>(List.of(attendance), pageable, 1);
             when(attendanceRepository.findByEmployee_IdAndDateBetween(anyLong(), any(), any(), any(Pageable.class)))
@@ -356,7 +346,7 @@ class AttendanceServiceTest {
 
         @Test
         void shouldAllowHrToGetAnyEmployeeAttendances() {
-            mockAuth(hrUser);
+            when(userService.getAuthenticatedUser()).thenReturn(hrUser);
             Pageable pageable = PageRequest.of(0, 10);
             Page<Attendance> attendancePage = new PageImpl<>(List.of(attendance), pageable, 1);
             when(attendanceRepository.findByEmployee_IdAndDateBetween(anyLong(), any(), any(), any(Pageable.class)))
@@ -372,7 +362,7 @@ class AttendanceServiceTest {
 
         @Test
         void shouldThrowForbiddenWhenNonHrRequestsOthersData() {
-            mockAuth(normalUser);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
 
             ApiException ex = assertThrows(ApiException.class,
                     () -> attendanceService.getEmployeeAttendances(0, 10, otherEmployee.getId(), TODAY, TODAY.plusDays(1)));
@@ -382,11 +372,7 @@ class AttendanceServiceTest {
 
         @Test
         void shouldThrowUnauthorizedWhenNoAuth() {
-            Authentication auth = mock(Authentication.class);
-            SecurityContext context = mock(SecurityContext.class);
-            when(auth.getPrincipal()).thenReturn("anonymousUser");
-            when(context.getAuthentication()).thenReturn(auth);
-            SecurityContextHolder.setContext(context);
+            when(userService.getAuthenticatedUser()).thenThrow(new ApiException(HttpStatus.UNAUTHORIZED, "Unauthorized"));
 
             ApiException ex = assertThrows(ApiException.class,
                     () -> attendanceService.getEmployeeAttendances(0, 10, 1L, TODAY, TODAY.plusDays(1)));

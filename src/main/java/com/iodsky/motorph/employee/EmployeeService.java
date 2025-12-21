@@ -96,7 +96,7 @@ public class EmployeeService {
             return user.getEmployee();
         }
 
-        throw new ApiException(HttpStatus.NOT_FOUND, "Authenticated user not found");
+        throw new ApiException(HttpStatus.UNAUTHORIZED, "Authenticated user not found");
     }
 
     public Employee getEmployeeById(Long id) {

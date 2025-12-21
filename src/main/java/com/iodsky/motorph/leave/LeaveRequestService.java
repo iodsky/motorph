@@ -2,6 +2,7 @@ package com.iodsky.motorph.leave;
 
 import com.iodsky.motorph.common.exception.ApiException;
 import com.iodsky.motorph.security.user.User;
+import com.iodsky.motorph.security.user.UserService;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +11,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
@@ -24,14 +24,11 @@ public class LeaveRequestService {
     private final LeaveRequestRepository leaveRequestRepository;
     private final LeaveCreditService leaveCreditService;
     private final LeaveRequestMapper leaveRequestMapper;
+    private final UserService userService;
 
     @Transactional
     public LeaveRequest createLeaveRequest(LeaveRequestDto dto) {
-
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (!(principal instanceof User user)) {
-            throw new ApiException(HttpStatus.UNAUTHORIZED, "Authentication required to access this resource");
-        }
+        User user = userService.getAuthenticatedUser();
         Long employeeId = user.getEmployee().getId();
 
         LeaveType type = resolveLeaveType(dto.getLeaveType());
@@ -66,10 +63,7 @@ public class LeaveRequestService {
     public Page<LeaveRequest> getLeaveRequests(int pageNo, int limit) {
         Pageable page = PageRequest.of(pageNo, limit, Sort.by(Sort.Direction.DESC, "requestDate"));
 
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (!(principal instanceof User user)) {
-            throw new ApiException(HttpStatus.UNAUTHORIZED, "Authentication required to access this resource");
-        }
+        User user = userService.getAuthenticatedUser();
 
         if (user.getUserRole().getRole().equals("HR")) {
             return leaveRequestRepository.findAll(page);
@@ -84,10 +78,7 @@ public class LeaveRequestService {
     }
 
     public LeaveRequest updateLeaveRequest(String leaveRequestId, LeaveRequestDto dto) {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (!(principal instanceof User user)) {
-            throw new ApiException(HttpStatus.UNAUTHORIZED, "Authentication required to access this resource");
-        }
+        User user = userService.getAuthenticatedUser();
 
         LeaveRequest entity = getLeaveRequestById(leaveRequestId);
         if (!entity.getEmployee().getId().equals(user.getEmployee().getId())) {
@@ -142,10 +133,7 @@ public class LeaveRequestService {
     }
 
     public void deleteLeaveRequest(String leaveRequestId) {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (!(principal instanceof User user)) {
-            throw new ApiException(HttpStatus.UNAUTHORIZED, "Authentication required to access this resource");
-        }
+        User user = userService.getAuthenticatedUser();
 
         LeaveRequest leaveRequest = getLeaveRequestById(leaveRequestId);
         if (!leaveRequest.getEmployee().getId().equals(user.getEmployee().getId())) {

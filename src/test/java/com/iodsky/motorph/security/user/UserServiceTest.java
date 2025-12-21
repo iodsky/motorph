@@ -210,29 +210,7 @@ class UserServiceTest {
     @Nested
     class GetUserRoleTests {
 
-        @Test
-        void shouldReturnRoleWhenRoleExists() {
-            when(userRoleRepository.findById("HR")).thenReturn(Optional.of(role));
-
-            UserRole result = userService.getUserRole("HR");
-
-            assertNotNull(result);
-            assertEquals("HR", result.getRole());
-            verify(userRoleRepository).findById("HR");
-        }
-
-        @Test
-        void shouldThrowBadRequestWhenRoleDoesNotExist() {
-            when(userRoleRepository.findById("INVALID")).thenReturn(Optional.empty());
-
-            ApiException ex = assertThrows(ApiException.class,
-                    () -> userService.getUserRole("INVALID"));
-
-            assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
-            assertEquals("Invalid role INVALID", ex.getMessage());
-        }
     }
-
     @Nested
     class ImportUsersTests {
 

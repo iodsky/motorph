@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -40,19 +41,6 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User " + username + " not found"));
     }
 
-    public Page<User> getAllUsers(int size, int limit, String role) {
-        Pageable pageable = PageRequest.of(size, limit);
-        if (role == null) {
-            return userRepository.findAll(pageable);
-        }
-
-        if (!userRoleRepository.existsByRole(role)) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid " + role);
-        }
-
-        return userRepository.findUserByUserRole_Role(role, pageable);
-    }
-
     public User createUser(UserRequest userRequest) {
 
         User user = userMapper.toEntity(userRequest);
@@ -74,19 +62,19 @@ public class UserService implements UserDetailsService {
                     userCsvService.parseCsv(file.getInputStream(), UserCsvRecord.class);
 
             LinkedHashSet<User> users = records.stream().map(r -> {
-                User user = r.entity();
-                UserCsvRecord csv = r.source();
+                        User user = r.entity();
+                        UserCsvRecord csv = r.source();
 
-                Employee employee = employeeService.getEmployeeById(csv.getEmployeeId());
-                UserRole role = getUserRole(csv.getRole());
+                        Employee employee = employeeService.getEmployeeById(csv.getEmployeeId());
+                        UserRole role = getUserRole(csv.getRole());
 
-                user.setEmployee(employee);
-                user.setUserRole(role);
+                        user.setEmployee(employee);
+                        user.setUserRole(role);
 
-                user.setPassword(passwordEncoder.encode(user.getPassword()));
+                        user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-                return user;
-            })
+                        return user;
+                    })
                     .filter(u -> !userRepository.existsByEmail(u.getEmail()))
                     .collect(Collectors.toCollection(LinkedHashSet::new));
 
@@ -97,7 +85,30 @@ public class UserService implements UserDetailsService {
         }
     }
 
-    public UserRole getUserRole(String role) {
+    public Page<User> getAllUsers(int size, int limit, String role) {
+        Pageable pageable = PageRequest.of(size, limit);
+        if (role == null) {
+            return userRepository.findAll(pageable);
+        }
+
+        if (!userRoleRepository.existsByRole(role)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid " + role);
+        }
+
+        return userRepository.findUserByUserRole_Role(role, pageable);
+    }
+
+    public User getAuthenticatedUser() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        if (principal instanceof User user) {
+            return user;
+        }
+
+        throw new ApiException(HttpStatus.UNAUTHORIZED, "No authenticated user found");
+    }
+
+    private UserRole getUserRole(String role) {
         return userRoleRepository.findById(role)
                 .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Invalid role " + role));
     }

@@ -8,6 +8,7 @@ import com.iodsky.motorph.common.exception.ApiException;
 import com.iodsky.motorph.employee.EmployeeService;
 import com.iodsky.motorph.employee.Employee;
 import com.iodsky.motorph.security.user.User;
+import com.iodsky.motorph.security.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +16,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -32,6 +32,7 @@ public class PayrollService {
     private final PayrollRepository payrollRepository;
     private final EmployeeService employeeService;
     private final AttendanceService attendanceService;
+    private final UserService userService;
     private final DeductionTypeRepository deductionTypeRepository;
     private final DateRangeResolver dateRangeResolver;
 
@@ -186,11 +187,7 @@ public class PayrollService {
     }
 
     public Payroll getPayrollById(UUID payrollId) {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-        if (!(principal instanceof User user)) {
-            throw new ApiException(HttpStatus.UNAUTHORIZED, "Authentication required to access this resource");
-        }
+        User user = userService.getAuthenticatedUser();
 
         Payroll payroll = payrollRepository.findById(payrollId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Payroll " + payrollId + " not found"));
@@ -211,11 +208,7 @@ public class PayrollService {
     }
 
     public Page<Payroll> getAllEmployeePayroll(int page, int limit, LocalDate periodStartDate, LocalDate periodEndDate) {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-        if (!(principal instanceof User user)) {
-            throw new ApiException(HttpStatus.UNAUTHORIZED, "Authentication required to access this resource");
-        }
+        User user = userService.getAuthenticatedUser();
 
         Pageable pageable = PageRequest.of(page, limit);
         DateRange range = dateRangeResolver.resolve(periodStartDate, periodEndDate);

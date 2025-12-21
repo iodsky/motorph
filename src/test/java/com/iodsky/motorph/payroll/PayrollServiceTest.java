@@ -10,6 +10,7 @@ import com.iodsky.motorph.employee.Compensation;
 import com.iodsky.motorph.employee.Employee;
 import com.iodsky.motorph.security.user.User;
 import com.iodsky.motorph.security.user.UserRole;
+import com.iodsky.motorph.security.user.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -41,6 +42,7 @@ class PayrollServiceTest {
     @Mock private PayrollRepository payrollRepository;
     @Mock private EmployeeService employeeService;
     @Mock private AttendanceService attendanceService;
+    @Mock private UserService userService;
     @Mock private DeductionTypeRepository deductionTypeRepository;
     @Mock private DateRangeResolver dateRangeResolver;
     @InjectMocks private PayrollService payrollService;
@@ -460,7 +462,7 @@ class PayrollServiceTest {
 
         @Test
         void shouldReturnPayrollForPayrollUser() {
-            mockAuth(payrollUser);
+            when(userService.getAuthenticatedUser()).thenReturn(payrollUser);
             when(payrollRepository.findById(payroll.getId())).thenReturn(Optional.of(payroll));
 
             Payroll result = payrollService.getPayrollById(payroll.getId());
@@ -472,7 +474,7 @@ class PayrollServiceTest {
 
         @Test
         void shouldAllowEmployeeToViewOwnPayroll() {
-            mockAuth(normalUser);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
             payroll.setEmployee(employee);
             when(payrollRepository.findById(payroll.getId())).thenReturn(Optional.of(payroll));
 
@@ -484,11 +486,7 @@ class PayrollServiceTest {
 
         @Test
         void shouldThrowUnauthorizedWhenPrincipalIsNotUser() {
-            Authentication auth = mock(Authentication.class);
-            SecurityContext context = mock(SecurityContext.class);
-            when(auth.getPrincipal()).thenReturn("anonymousUser");
-            when(context.getAuthentication()).thenReturn(auth);
-            SecurityContextHolder.setContext(context);
+            when(userService.getAuthenticatedUser()).thenThrow(new ApiException(HttpStatus.UNAUTHORIZED, "Unauthorized"));
 
             ApiException ex = assertThrows(ApiException.class,
                     () -> payrollService.getPayrollById(payroll.getId()));
@@ -499,7 +497,7 @@ class PayrollServiceTest {
 
         @Test
         void shouldThrowNotFoundWhenPayrollDoesNotExist() {
-            mockAuth(payrollUser);
+            when(userService.getAuthenticatedUser()).thenReturn(payrollUser);
             UUID nonExistentId = UUID.randomUUID();
             when(payrollRepository.findById(nonExistentId)).thenReturn(Optional.empty());
 
@@ -511,7 +509,7 @@ class PayrollServiceTest {
 
         @Test
         void shouldThrowForbiddenWhenPayrollUserAccessesOtherEmployeePayroll() {
-            mockAuth(payrollUser);
+            when(userService.getAuthenticatedUser()).thenReturn(payrollUser);
             payroll.setEmployee(otherEmployee);
             when(payrollRepository.findById(payroll.getId())).thenReturn(Optional.of(payroll));
 
@@ -523,7 +521,7 @@ class PayrollServiceTest {
 
         @Test
         void shouldThrowForbiddenWhenNonPayrollUserTries() {
-            mockAuth(hrUser);
+            when(userService.getAuthenticatedUser()).thenReturn(hrUser);
             payroll.setEmployee(employee);
             when(payrollRepository.findById(payroll.getId())).thenReturn(Optional.of(payroll));
 
@@ -611,7 +609,7 @@ class PayrollServiceTest {
 
         @Test
         void shouldReturnEmployeePayrolls() {
-            mockAuth(normalUser);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
             List<Payroll> payrolls = List.of(payroll);
             Page<Payroll> page = new PageImpl<>(payrolls);
             DateRange dateRange = new DateRange(PERIOD_START, PERIOD_END);
@@ -631,11 +629,7 @@ class PayrollServiceTest {
 
         @Test
         void shouldThrowUnauthorizedWhenPrincipalIsNotUser() {
-            Authentication auth = mock(Authentication.class);
-            SecurityContext context = mock(SecurityContext.class);
-            when(auth.getPrincipal()).thenReturn("anonymousUser");
-            when(context.getAuthentication()).thenReturn(auth);
-            SecurityContextHolder.setContext(context);
+            when(userService.getAuthenticatedUser()).thenThrow(new ApiException(HttpStatus.UNAUTHORIZED, "Unauthorized"));
 
             ApiException ex = assertThrows(ApiException.class,
                     () -> payrollService.getAllEmployeePayroll(0, 10, PERIOD_START, PERIOD_END));
@@ -647,7 +641,7 @@ class PayrollServiceTest {
 
         @Test
         void shouldReturnEmptyPageWhenEmployeeHasNoPayrolls() {
-            mockAuth(normalUser);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
             Page<Payroll> emptyPage = new PageImpl<>(Collections.emptyList());
             DateRange dateRange = new DateRange(PERIOD_START, PERIOD_END);
 
@@ -664,7 +658,7 @@ class PayrollServiceTest {
 
         @Test
         void shouldOnlyReturnPayrollsForAuthenticatedEmployee() {
-            mockAuth(normalUser);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
             DateRange dateRange = new DateRange(PERIOD_START, PERIOD_END);
             Page<Payroll> page = new PageImpl<>(List.of(payroll));
 
@@ -683,7 +677,7 @@ class PayrollServiceTest {
 
         @Test
         void shouldHandlePaginationForEmployeePayrolls() {
-            mockAuth(normalUser);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
             List<Payroll> payrolls = Arrays.asList(payroll, payroll);
             Page<Payroll> page = new PageImpl<>(payrolls, PageRequest.of(0, 2), 10);
             DateRange dateRange = new DateRange(PERIOD_START, PERIOD_END);
@@ -702,7 +696,7 @@ class PayrollServiceTest {
 
         @Test
         void shouldUseDateRangeResolverForEmployeePayrolls() {
-            mockAuth(normalUser);
+            when(userService.getAuthenticatedUser()).thenReturn(normalUser);
             DateRange customRange = new DateRange(PERIOD_START.minusDays(10), PERIOD_END.plusDays(10));
             Page<Payroll> page = new PageImpl<>(Collections.emptyList());
 
