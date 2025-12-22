@@ -1,6 +1,6 @@
 services:
   postgresql:
-    container_name: mph-db
+    container_name: sweldox-db
     image: "postgres:latest"
     restart: unless-stopped
     environment:

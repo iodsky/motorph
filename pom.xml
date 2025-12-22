@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.iodsky</groupId>
-	<artifactId>motorph</artifactId>
+	<artifactId>sweldox</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>motorph</name>
-	<description>Demo project for Spring Boot</description>
+	<name>Sweldox</name>
+	<description>Sweldox - HRIS RESTful API for employee, attendance, leave, and payroll management</description>
 	<url/>
 	<licenses>
 		<license/>

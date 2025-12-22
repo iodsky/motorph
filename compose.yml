@@ -1,7 +1,7 @@
 services:
   spring:
-    container_name: mph-server
-    image: ghcr.io/iodsky/motorph-api:latest
+    container_name: sweldox-server
+    image: ghcr.io/iodsky/sweldox-api:latest
     restart: always
     ports:
       - 8001:8001
@@ -9,13 +9,14 @@ services:
       - .env
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.motorph.rule=Host(`motorph.iodsky.com`)"
-      - "traefik.http.routers.motorph.entrypoints=websecure"
-      - "traefik.http.routers.motorph.tls.certresolver=myresolver"
-      - "traefik.http.services.orderly.loadbalancer.server.port=8001"
+      - "traefik.http.routers.sweldox.rule=Host(`sweldox.iodsky.com`)"
+      - "traefik.http.routers.sweldox.entrypoints=websecure"
+      - "traefik.http.routers.sweldox.tls.certresolver=myresolver"
+      - "traefik.http.services.sweldox.loadbalancer.server.port=8001"
     networks:
-      - mph-network
+      - sweldox-network
       - traefik
+
   watchtower:
     image: containrrr/watchtower
     restart: always
@@ -27,12 +28,12 @@ services:
       WATCHTOWER_INCLUDE_RESTARTING: "true"
     command: --cleanup spring
     networks:
-      - mph-network
+      - sweldox-network
 
 volumes:
   postgres-data:
 
 networks:
-  mph-network:
+  sweldox-network:
   traefik:
     external: true

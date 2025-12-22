@@ -67,5 +67,5 @@ VALUES ('IT', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
 ON CONFLICT (role) DO NOTHING;
 
 INSERT INTO users (id, employee_id, email, password, role_id, created_at, updated_at, version)
-VALUES ('d0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 10000, 'superuser@motorph.com', '$2a$12$lMIUx49rQdGhsrfLbQB3Hetueio4UgmdWV/Vcw3KweucDgZ6fDs/a', 'IT', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)
+VALUES ('d0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 10000, 'superuser@sweldox.com', '$2a$12$lMIUx49rQdGhsrfLbQB3Hetueio4UgmdWV/Vcw3KweucDgZ6fDs/a', 'IT', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)
 ON CONFLICT (id) DO NOTHING;

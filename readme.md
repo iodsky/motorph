@@ -1,4 +1,4 @@
-# MotorPH API
+# Sweldox: HRIS 👥 RESTful API
 
 ![Java](https://img.shields.io/badge/Java-21-orange?style=flat-square&logo=openjdk)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.6-brightgreen?style=flat-square&logo=spring-boot)
@@ -6,11 +6,9 @@
 ![Maven](https://img.shields.io/badge/Maven-3.8+-C71A36?style=flat-square&logo=apache-maven)
 ![Status](https://img.shields.io/badge/Status-In%20Development-blue?style=flat-square)
 
-A comprehensive employee management and payroll system REST API built with Spring Boot. This project demonstrates backend development best practices and serves as preparation for software engineering internships.
-
 ## 🎯 Project Overview
 
-MotorPH API is a full-featured Human Resources Information System (HRIS) that manages employee data, attendance tracking, and payroll processing. The system implements role-based access control, JWT authentication, and follows clean architecture principles.
+Sweldox API is a full-featured Human Resources Information System (HRIS) that manages employee data, attendance tracking, and payroll processing. The system implements role-based access control, JWT authentication, and follows clean architecture principles.
 
 ## 🏗️ Architecture & Technology Stack
 
@@ -33,11 +31,10 @@ MotorPH API is a full-featured Human Resources Information System (HRIS) that ma
 ## 📁 Project Structure
 
 ```
-motorph_api/
 ├── src/
 │   ├── main/
-│   │   ├── java/com/iodsky/motorph/
-│   │   │   ├── MotorphApplication.java      # Application entry point
+│   │   ├── java/com/iodsky/sweldox/
+│   │   │   ├── Application.java      # Application entry point
 │   │   │   ├── attendance/                   # Attendance management module
 │   │   │   ├── common/                       # Shared utilities and DTOs
 │   │   │   ├── csvimport/                    # CSV import functionality
@@ -59,49 +56,7 @@ motorph_api/
 
 ## 🗄️ Database Entity-Relationship Diagram
 
-![MotorPH](docs/images/motorph.png)
-
-The database schema follows a normalized relational design with the following key entities and relationships:
-
-### Core Entities
-
-**Employee** (Central Entity)
-- Primary entity containing personal information
-- Has one-to-one relationships with:
-  - `GovernmentId` - SSS, PhilHealth, TIN, Pag-IBIG numbers
-  - `EmploymentDetails` - Department, position, supervisor, status
-  - `Compensation` - Salary and allowances
-
-**Attendance**
-- Tracks employee clock in/out records
-- Many-to-one relationship with Employee
-- Fields: date, time in, time out, total hours, overtime
-
-**Payroll**
-- Generated payroll records for employees
-- Many-to-one relationship with Employee
-- Calculated from attendance and compensation data
-- Fields: period dates, gross pay, deductions, net pay
-
-**Department** & **Position**
-- Organizational structure entities
-- Referenced by EmploymentDetails
-
-**User** (Security)
-- Authentication and authorization
-- One-to-one with Employee
-- Contains username, password (encrypted), and roles
-
-**Leave Management**
-- **LeaveRequest** - Employee leave applications
-  - Many-to-one relationship with Employee
-  - Fields: leave type, request date, start/end dates, status, notes
-  - Status: PENDING, APPROVED, REJECTED
-  - Types: Vacation, Sick, Maternity, Paternity, Solo Parent, Bereavement
-- **LeaveCredit** - Employee leave balances
-  - Many-to-one relationship with Employee
-  - Tracks available leave credits by type and fiscal year
-  - Fields: leave type, credits (days), fiscal year
+![](docs/images/erd.png)
 
 ## 🔑 Key Features
 
@@ -209,74 +164,6 @@ The system implements a role-based access control system with the following role
 - **IT** - Access to employee information for system administration
 - **EMPLOYEE** - Basic access to personal information, attendance, and payroll records
 
-## 📡 API Endpoints
-
-### Authentication
-```
-POST /api/auth/login          # User authentication (returns JWT token)
-```
-
-### Employee Management
-```
-POST   /api/employees         # Create new employee (HR only)
-GET    /api/employees         # List all employees with pagination & filters (HR, IT, PAYROLL)
-                              # Query params: page, limit, department, supervisor, status
-GET    /api/employees/me      # Get authenticated employee's profile
-GET    /api/employees/{id}    # Get employee by ID (HR only)
-PUT    /api/employees/{id}    # Update employee (HR only)
-DELETE /api/employees/{id}    # Delete employee (HR only)
-POST   /api/employees/import  # Bulk import employees from CSV (HR, IT)
-```
-
-### Attendance
-```
-POST   /api/attendances               # Clock in/out (creates attendance record)
-GET    /api/attendances               # Get all attendance records with pagination (HR only)
-                                      # Query params: page, limit, startDate, endDate
-GET    /api/attendances/me            # Get my attendance records with pagination
-                                      # Query params: page, limit, startDate, endDate
-GET    /api/attendances/employee/{id} # Get employee attendance (HR only)
-                                      # Query params: page, limit, startDate, endDate
-PATCH  /api/attendances/{id}          # Update attendance record (clock out)
-```
-
-### Payroll
-```
-POST   /api/payroll           # Generate payroll (PAYROLL role)
-                              # Batch: omit employeeId to process all employees
-                              # Single: include employeeId for specific employee
-GET    /api/payroll           # Get all payroll records with pagination (PAYROLL role)
-                              # Query params: page, limit, periodStartDate, periodEndDate
-GET    /api/payroll/me        # Get my payroll records with pagination
-                              # Query params: page, limit, periodStartDate, periodEndDate
-GET    /api/payroll/{id}      # Get payroll by ID
-```
-
-### Leave Management
-```
-POST   /api/leaves            # Create leave request
-GET    /api/leaves            # Get leave requests with pagination
-                              # Employees see own requests, HR sees all
-                              # Query params: pageNum, limit
-GET    /api/leaves/{id}       # Get leave request by ID
-PUT    /api/leaves/{id}       # Update leave request (own requests only)
-PATCH  /api/leaves/{id}       # Update leave status - approve/reject (HR only)
-DELETE /api/leaves/{id}       # Delete leave request
-
-POST   /api/leaves/credits    # Initialize employee leave credits (HR only)
-                              # Supports JSON body or CSV upload (multipart/form-data)
-GET    /api/leaves/credits    # Get my leave credit balances
-DELETE /api/leaves/credits/employees/{employeeId}  # Delete employee leave credits
-```
-
-### User Management
-```
-POST   /api/users             # Create new user account (IT only)
-GET    /api/users             # List all users with pagination (IT only)
-                              # Query params: page, limit, role
-POST   /api/users/import      # Bulk import users from CSV (IT only)
-```
-
 ## 🚀 Getting Started
 
 ### Prerequisites
@@ -297,14 +184,14 @@ SPRING_PROFILES_ACTIVE=local  # Use 'local' for development, 'prod' for producti
 PORT=8001
 
 # Local Database Configuration (for local profile)
-LOCAL_DB=motorph
+LOCAL_DB=sweldox
 LOCAL_DB_HOST=localhost
 LOCAL_DB_PORT=5432
 LOCAL_DB_USER=postgres
 LOCAL_DB_PASSWORD=your-password
 
 # Cloud Database Configuration (for prod profile - AWS RDS)
-CLOUD_DB=motorph
+CLOUD_DB=sweldox
 CLOUD_DB_HOST=your-rds-endpoint.amazonaws.com
 CLOUD_DB_PORT=5432
 CLOUD_DB_USER=postgres
@@ -322,7 +209,7 @@ JWT_EXPIRATION=86400000  # 24 hours in milliseconds
 1. **Clone the repository**
 ```powershell
 git clone <repository-url>
-cd motorph_api
+cd sweldox
 ```
 
 2. **Create .env file**
@@ -386,7 +273,7 @@ The project includes two Docker Compose configurations:
 
 ### Build Docker Image
 ```powershell
-docker build -t motorph-api .
+docker build -t sweldox-api .
 ```
 
 ### Run with Docker Compose (Full Stack)
@@ -451,5 +338,3 @@ Run tests with:
 ### Phase 4: Documentation & Enhancement 🔮
 - [ ] OpenAPI/Swagger documentation
 ---
-
-**Note**: This project is actively being developed as part of backend development practice for internship preparation. The focus is on implementing industry-standard practices, clean code, and scalable architecture.
