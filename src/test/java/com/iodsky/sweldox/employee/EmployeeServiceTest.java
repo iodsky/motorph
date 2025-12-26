@@ -62,6 +62,9 @@ class EmployeeServiceTest {
         compensation.setBenefits(new ArrayList<>());
         employee.setCompensation(compensation);
 
+        GovernmentId governmentId = new GovernmentId();
+        employee.setGovernmentId(governmentId);
+
         request = new EmployeeRequest();
         EmploymentDetailsRequest reqDetails = new EmploymentDetailsRequest();
         reqDetails.setDepartmentId("DEP001");
@@ -280,10 +283,12 @@ class EmployeeServiceTest {
         @Test
         void shouldDeleteEmployeeSuccessfully() {
             when(employeeRepository.findById(1L)).thenReturn(Optional.of(employee));
+            when(employeeRepository.save(any(Employee.class))).thenReturn(employee);
 
-            employeeService.deleteEmployeeById(1L);
+            employeeService.deleteEmployeeById(1L, "TERMINATED");
 
-            verify(employeeRepository).delete(employee);
+            verify(employeeRepository).save(employee);
+            assertNotNull(employee.getDeletedAt());
         }
 
         @Test
@@ -291,9 +296,30 @@ class EmployeeServiceTest {
             when(employeeRepository.findById(1L)).thenReturn(Optional.empty());
 
             ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-                    () -> employeeService.deleteEmployeeById(1L));
+                    () -> employeeService.deleteEmployeeById(1L, "RESIGNED"));
 
             assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+        }
+
+        @Test
+        void shouldThrowBadRequestWhenDeletingAlreadyDeletedEmployee() {
+            employee.setDeletedAt(java.time.Instant.now());
+            when(employeeRepository.findById(1L)).thenReturn(Optional.of(employee));
+
+            ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                    () -> employeeService.deleteEmployeeById(1L, "TERMINATED"));
+
+            assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        }
+
+        @Test
+        void shouldThrowBadRequestWhenStatusIsInvalid() {
+            when(employeeRepository.findById(1L)).thenReturn(Optional.of(employee));
+
+            ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                    () -> employeeService.deleteEmployeeById(1L, "ACTIVE"));
+
+            assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
         }
     }
 }

@@ -25,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -135,10 +136,36 @@ public class EmployeeService {
         }
     }
 
-    public void deleteEmployeeById(Long id) {
-        employeeRepository.findById(id).ifPresentOrElse(employeeRepository::delete, () -> {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Employee " + id + " not found");
-        });
+    @Transactional
+    public void deleteEmployeeById(Long id, String status) {
+        Employee employee = getEmployeeById(id);
+        if (employee.isDeleted()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Employee already deleted");
+        }
+
+        Status status_;
+        try {
+            status_ = Status.valueOf(status.toUpperCase());
+            if (status_ != Status.TERMINATED && status_ != Status.RESIGNED) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status must be either TERMINATED or RESIGNED");
+            }
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status must be either TERMINATED or RESIGNED");
+        }
+
+        List<Employee> subordinates = employeeRepository.findAllByEmploymentDetails_Supervisor_Id(employee.getId());
+        if (!subordinates.isEmpty()) {
+            subordinates.forEach(subordinate -> subordinate.getEmploymentDetails().setSupervisor(null));
+            employeeRepository.saveAll(subordinates);
+        }
+
+        employee.setDeletedAt(Instant.now());
+        employee.getEmploymentDetails().setStatus(status_);
+        employee.getEmploymentDetails().setDeletedAt(Instant.now());
+        employee.getCompensation().setDeletedAt(Instant.now());
+        employee.getGovernmentId().setDeletedAt(Instant.now());
+
+        employeeRepository.save(employee);
     }
 
     public List<Long> getAllActiveEmployeeIds() {

@@ -82,8 +82,8 @@ public class EmployeeController {
 
     @PreAuthorize("hasRole('HR')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<DeleteResponse>> deleteEmployee(@PathVariable long id) {
-        employeeService.deleteEmployeeById(id);
+    public ResponseEntity<ApiResponse<DeleteResponse>> deleteEmployee(@PathVariable long id, @RequestParam String status) {
+        employeeService.deleteEmployeeById(id, status);
         DeleteResponse res = new DeleteResponse("Employee", id);
         return ResponseFactory.ok("Employee deleted successfully", res);
     }
