@@ -108,6 +108,11 @@ public class UserService implements UserDetailsService {
         throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No authenticated user found");
     }
 
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User " + email + " not found"));
+    }
+
     private UserRole getUserRole(String role) {
         return userRoleRepository.findById(role)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid role " + role));

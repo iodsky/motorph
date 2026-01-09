@@ -6,7 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.Instant;
-import java.util.List;
 
 @Data
 @Builder
@@ -18,12 +17,6 @@ public class ErrorResponse {
     private int status;
     private String message;
     private String path;
-    private List<FieldValidationError> fieldErrors;
+    private DuplicateField duplicateField;
 
-    @Data
-    @AllArgsConstructor
-    public static class FieldValidationError {
-        private String field;
-        private String message;
-    }
 }

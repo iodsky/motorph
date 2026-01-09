@@ -1,5 +1,6 @@
 package com.iodsky.sweldox.employee;
 
+import com.iodsky.sweldox.common.DuplicateField;
 import com.iodsky.sweldox.common.exception.CsvImportException;
 import com.iodsky.sweldox.common.exception.DuplicateFieldException;
 import com.iodsky.sweldox.csvimport.CsvResult;
@@ -27,6 +28,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -62,18 +65,8 @@ public class EmployeeService {
             });
 
             return employeeRepository.save(employee);
-        } catch (DataIntegrityViolationException e) {
-            String msg = null;
-
-            if (e.getRootCause() != null) {
-                msg = e.getRootCause().getMessage();
-            }
-
-            if (msg != null && msg.contains("Key (")) {
-                msg = msg.split("[()]")[1];
-                throw new DuplicateFieldException("Duplicate value for field '" + msg + "'");
-            }
-            throw new DuplicateFieldException("Duplicate field detected");
+        } catch (DataIntegrityViolationException ex) {
+            throw handleDataIntegrityViolation(ex);
         }
     }
 
@@ -126,13 +119,8 @@ public class EmployeeService {
 
             return employeeRepository.save(employee);
 
-        } catch (DataIntegrityViolationException e) {
-            String msg = e.getRootCause() != null ? e.getRootCause().getMessage() : e.getMessage();
-            if (msg != null && msg.contains("Key (")) {
-                msg = msg.split("[()]")[1];
-                throw new DuplicateFieldException("Duplicate value for field '" + msg + "'");
-            }
-            throw new DuplicateFieldException("Duplicate field detected");
+        } catch (DataIntegrityViolationException ex) {
+            throw handleDataIntegrityViolation(ex);
         }
     }
 
@@ -252,5 +240,32 @@ public class EmployeeService {
         } catch (IOException e) {
             throw new CsvImportException(e.getMessage());
         }
+    }
+
+    private DuplicateFieldException handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        String message = "Field validation error";
+        DuplicateField duplicateField = null;
+
+        Throwable rootCause = ex.getMostSpecificCause();
+        String errorMessage = rootCause.getMessage();
+
+        if (errorMessage != null) {
+            Pattern pattern = java.util.regex.Pattern.compile("Key \\(([^)]+)\\)=\\(([^)]+)\\)");
+            Matcher matcher = pattern.matcher(errorMessage);
+
+            if (matcher.find()) {
+                String field = matcher.group(1);
+                String value = matcher.group(2);
+
+                duplicateField = DuplicateField.builder()
+                        .field(field)
+                        .value(value)
+                        .build();
+
+                message = String.format("Duplicate value '%s' for field '%s'", value, field);
+            }
+        }
+
+        return new DuplicateFieldException(message, duplicateField);
     }
 }
