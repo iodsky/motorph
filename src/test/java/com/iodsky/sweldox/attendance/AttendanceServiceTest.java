@@ -4,7 +4,6 @@ import com.iodsky.sweldox.common.DateRange;
 import com.iodsky.sweldox.common.DateRangeResolver;
 import com.iodsky.sweldox.employee.EmployeeService;
 import com.iodsky.sweldox.employee.Employee;
-import com.iodsky.sweldox.employee.EmploymentDetails;
 import com.iodsky.sweldox.security.user.User;
 import com.iodsky.sweldox.security.user.UserRole;
 import com.iodsky.sweldox.security.user.UserService;
@@ -42,8 +41,6 @@ class AttendanceServiceTest {
     private Employee otherEmployee;
     private AttendanceDto dto;
     private Attendance attendance;
-    private EmploymentDetails standardEmploymentDetails;
-    private EmploymentDetails partTimeEmploymentDetails;
 
     private static final LocalDate TODAY = LocalDate.of(2025, 11, 1);
     private static final LocalTime SHIFT_START = LocalTime.of(8, 0);
@@ -53,27 +50,16 @@ class AttendanceServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Setup standard 9-hour shift employment details
-        standardEmploymentDetails = EmploymentDetails.builder()
-                .startShift(SHIFT_START)
-                .endShift(SHIFT_END)
-                .build();
-
-        // Setup part-time 4-hour shift employment details
-        partTimeEmploymentDetails = EmploymentDetails.builder()
-                .startShift(PART_TIME_START)
-                .endShift(PART_TIME_END)
-                .build();
-
         currentEmployee = new Employee();
         currentEmployee.setId(1L);
-        currentEmployee.setEmploymentDetails(standardEmploymentDetails);
-        standardEmploymentDetails.setEmployee(currentEmployee);
+        currentEmployee.setStartShift(SHIFT_START);
+        currentEmployee.setEndShift(SHIFT_END);
+
 
         otherEmployee = new Employee();
         otherEmployee.setId(2L);
-        otherEmployee.setEmploymentDetails(partTimeEmploymentDetails);
-        partTimeEmploymentDetails.setEmployee(otherEmployee);
+        otherEmployee.setStartShift(PART_TIME_START);
+        otherEmployee.setEndShift(PART_TIME_END);
 
         hrUser = new User();
         hrUser.setUserRole(new UserRole("HR"));
@@ -389,7 +375,6 @@ class AttendanceServiceTest {
             when(userService.getAuthenticatedUser()).thenReturn(normalUser);
             Employee employeeWithoutShift = new Employee();
             employeeWithoutShift.setId(3L);
-            employeeWithoutShift.setEmploymentDetails(null);
 
             Attendance existing = Attendance.builder()
                     .id(UUID.randomUUID())
