@@ -16,26 +16,26 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     @NonNull
     Page<Employee> findAll(@NonNull Pageable pageable);
 
-    @Query("SELECT e FROM Employee e WHERE e.deletedAt IS NULL AND e.employmentDetails.status = :status")
+    @Query("SELECT e FROM Employee e WHERE e.deletedAt IS NULL AND e.status = :status")
     Page<Employee> findByEmploymentDetails_Status(Status status, Pageable pageable);
 
-    @Query("SELECT e FROM Employee e WHERE e.deletedAt IS NULL AND e.employmentDetails.department.id = :departmentId")
+    @Query("SELECT e FROM Employee e WHERE e.deletedAt IS NULL AND e.department.id = :departmentId")
     Page<Employee> findByEmploymentDetails_Department_Id(String departmentId, Pageable pageable);
 
-    @Query("SELECT e FROM Employee e WHERE e.deletedAt IS NULL AND e.employmentDetails.supervisor.id = :supervisorId")
+    @Query("SELECT e FROM Employee e WHERE e.deletedAt IS NULL AND e.supervisor.id = :supervisorId")
     Page<Employee> findByEmploymentDetails_Supervisor_Id(Long supervisorId, Pageable pageable);
 
     @Query("""
         SELECT e.id
         FROM Employee e
-        WHERE e.employmentDetails.status NOT IN (
+        WHERE e.status NOT IN (
         com.iodsky.sweldox.employee.Status.RESIGNED,
          com.iodsky.sweldox.employee.Status.TERMINATED
          )
        """)
     List<Long> findAllActiveEmployeeIds();
 
-    @Query("SELECT e FROM Employee e WHERE e.deletedAt IS NULL AND e.employmentDetails.supervisor.id = :supervisorId")
-    List<Employee> findAllByEmploymentDetails_Supervisor_Id(Long supervisorId);
+    @Query("SELECT e FROM Employee  e WHERE e.deletedAt IS NULL AND e.supervisor.id = :supervisorId")
+    List<Employee> findAllBySupervisor_Id(Long supervisorId);
 
 }
