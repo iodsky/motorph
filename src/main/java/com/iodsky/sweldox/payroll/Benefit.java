@@ -2,7 +2,7 @@ package com.iodsky.sweldox.payroll;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.iodsky.sweldox.common.BaseModel;
-import com.iodsky.sweldox.employee.Compensation;
+import com.iodsky.sweldox.employee.Employee;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -23,9 +23,9 @@ public class Benefit extends BaseModel {
     private UUID id;
 
     @ManyToOne
-    @JoinColumn(name = "compensation_id")
+    @JoinColumn(name = "employee_id")
     @JsonIgnore
-    private Compensation compensation;
+    private Employee employee;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "benefit_type_id")
