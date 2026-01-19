@@ -83,10 +83,10 @@ public class PayrollService {
     private Payroll buildPayroll(Long employeeId, LocalDate periodStartDate, LocalDate periodEndDate, LocalDate payDate) {
 
         Employee employee = employeeService.getEmployeeById(employeeId);
-        BigDecimal basicSalary = employee.getCompensation().getBasicSalary();
-        BigDecimal hourlyRate = employee.getCompensation().getHourlyRate();
+        BigDecimal basicSalary = employee.getBasicSalary();
+        BigDecimal hourlyRate = employee.getHourlyRate();
         BigDecimal dailyRate = PayrollCalculator.calculateDailyRate(hourlyRate);
-        List<Benefit> benefits = employee.getCompensation().getBenefits();
+        List<Benefit> benefits = employee.getBenefits();
         List<Attendance> attendances = attendanceService.getEmployeeAttendances(employeeId, periodStartDate, periodEndDate);
 
         // Calculate hours
