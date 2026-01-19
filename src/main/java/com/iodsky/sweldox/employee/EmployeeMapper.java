@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -23,10 +24,7 @@ public class EmployeeMapper implements CsvMapper<Employee, EmployeeCsvRecord> {
         Employee supervisor = employee.getSupervisor();
         String supervisorName = supervisor != null ? supervisor.getFirstName() + " " + supervisor.getLastName() : "N/A";
 
-        List<BenefitDto> benefits = employee.getBenefits()
-                .stream()
-                .map(benefitMapper::toDto)
-                .toList();
+        var benefits = employee.getBenefits().stream().collect(Collectors.toMap(b -> b.getBenefitType().getId(), Benefit::getAmount));
 
         return EmployeeDto.builder()
                 .id(employee.getId())
@@ -59,6 +57,9 @@ public class EmployeeMapper implements CsvMapper<Employee, EmployeeCsvRecord> {
                 .birthday(request.getBirthday())
                 .address(request.getAddress())
                 .phoneNumber(request.getPhoneNumber())
+                .status(request.getStatus())
+                .startShift(request.getStartShift())
+                .endShift(request.getEndShift())
                 .build();
 
         GovernmentId governmentId = GovernmentId.builder()
@@ -78,9 +79,15 @@ public class EmployeeMapper implements CsvMapper<Employee, EmployeeCsvRecord> {
         employee.setHourlyRate(hourlyRate);
 
         List<Benefit> benefits = request.getBenefits()
-                        .stream()
-                        .map(benefitMapper::toEntity)
-                        .toList();
+                .entrySet()
+                .stream()
+                .map( b -> benefitMapper.toEntity(
+                        BenefitDto.builder()
+                                .benefit(b.getKey())
+                                .amount(b.getValue())
+                                .build()
+                )).
+                toList();
 
         benefits.forEach(b -> b.setEmployee(employee));
         employee.setBenefits(benefits);
@@ -122,9 +129,17 @@ public class EmployeeMapper implements CsvMapper<Employee, EmployeeCsvRecord> {
         existing.setSemiMonthlyRate(semiMonthlyRate);
         existing.setHourlyRate(hourlyRate);
 
-        List<Benefit> benefits = request.getBenefits().stream()
-                .map(benefitMapper::toEntity)
-                .toList();
+        List<Benefit> benefits = request.getBenefits()
+                .entrySet()
+                .stream()
+                .map( b -> benefitMapper.toEntity(
+                        BenefitDto.builder()
+                                .benefit(b.getKey())
+                                .amount(b.getValue())
+                                .build()
+                )).
+                toList();
+
         benefits.forEach(b -> b.setEmployee(existing));
         existing.getBenefits().clear();
         existing.getBenefits().addAll(benefits);

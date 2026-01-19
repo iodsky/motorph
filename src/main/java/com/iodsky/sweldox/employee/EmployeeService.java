@@ -43,6 +43,7 @@ public class EmployeeService {
     private final BenefitService benefitService;
     private final CsvService<Employee, EmployeeCsvRecord> employeeCsvService;
 
+    @Transactional
     public Employee createEmployee(EmployeeRequest request) {
         try {
             Employee employee = employeeMapper.toEntity(request);
