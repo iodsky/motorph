@@ -48,18 +48,18 @@ public class EmployeeService {
             Employee employee = employeeMapper.toEntity(request);
 
             Employee supervisor = null;
-            if (request.getEmploymentDetails().getSupervisorId() != null) {
-                supervisor = getEmployeeById(request.getEmploymentDetails().getSupervisorId());
+            if (request.getSupervisorId() != null) {
+                supervisor = getEmployeeById(request.getSupervisorId());
             }
 
-            Department department = departmentService.getDepartmentById(request.getEmploymentDetails().getDepartmentId());
-            Position position = positionService.getPositionById(request.getEmploymentDetails().getPositionId());
+            Department department = departmentService.getDepartmentById(request.getDepartmentId());
+            Position position = positionService.getPositionById(request.getPositionId());
 
-            employee.getEmploymentDetails().setSupervisor(supervisor);
-            employee.getEmploymentDetails().setDepartment(department);
-            employee.getEmploymentDetails().setPosition(position);
+            employee.setSupervisor(supervisor);
+            employee.setDepartment(department);
+            employee.setPosition(position);
 
-            List<Benefit> benefits = employee.getCompensation().getBenefits();
+            List<Benefit> benefits = employee.getBenefits();
             benefits.forEach(b -> {
                 b.setBenefitType(benefitService.getBenefitTypeById(b.getBenefitType().getId()));
             });
@@ -104,16 +104,16 @@ public class EmployeeService {
 
         try {
             Employee supervisor = null;
-            if (request.getEmploymentDetails().getSupervisorId() != null) {
-                supervisor = getEmployeeById(request.getEmploymentDetails().getSupervisorId());
+            if (request.getSupervisorId() != null) {
+                supervisor = getEmployeeById(request.getSupervisorId());
             }
 
-            Department department = departmentService.getDepartmentById(request.getEmploymentDetails().getDepartmentId());
-            Position position = positionService.getPositionById(request.getEmploymentDetails().getPositionId());
+            Department department = departmentService.getDepartmentById(request.getDepartmentId());
+            Position position = positionService.getPositionById(request.getPositionId());
 
-            employee.getEmploymentDetails().setSupervisor(supervisor);
-            employee.getEmploymentDetails().setDepartment(department);
-            employee.getEmploymentDetails().setPosition(position);
+            employee.setSupervisor(supervisor);
+            employee.setDepartment(department);
+            employee.setPosition(position);
 
             employeeMapper.updateEntity(employee, request);
 
@@ -141,17 +141,14 @@ public class EmployeeService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status must be either TERMINATED or RESIGNED");
         }
 
-        List<Employee> subordinates = employeeRepository.findAllByEmploymentDetails_Supervisor_Id(employee.getId());
+        List<Employee> subordinates = employeeRepository.findAllBySupervisor_Id(employee.getId());
         if (!subordinates.isEmpty()) {
-            subordinates.forEach(subordinate -> subordinate.getEmploymentDetails().setSupervisor(null));
+            subordinates.forEach(subordinate -> subordinate.setSupervisor(null));
             employeeRepository.saveAll(subordinates);
         }
 
         employee.setDeletedAt(Instant.now());
-        employee.getEmploymentDetails().setStatus(status_);
-        employee.getEmploymentDetails().setDeletedAt(Instant.now());
-        employee.getCompensation().setDeletedAt(Instant.now());
-        employee.getGovernmentId().setDeletedAt(Instant.now());
+        employee.setStatus(status_);
 
         employeeRepository.save(employee);
     }
@@ -182,8 +179,8 @@ public class EmployeeService {
                 EmployeeCsvRecord csv = r.source();
 
                 Position position = positionMap.get(csv.getPosition());
-                employee.getEmploymentDetails().setPosition(position);
-                employee.getEmploymentDetails().setDepartment(position.getDepartment());
+                employee.setPosition(position);
+                employee.setDepartment(position.getDepartment());
 
                 Benefit mealAllowance = Benefit.builder()
                         .benefitType(mealBenefitType)
@@ -200,11 +197,11 @@ public class EmployeeService {
                         .amount(csv.getPhoneAllowance())
                         .build();
 
-                employee.getCompensation().setBenefits(
+                employee.setBenefits(
                         new ArrayList<>(List.of(mealAllowance, phoneAllowance, clothingAllowance))
                 );
-                employee.getCompensation().getBenefits()
-                        .forEach(b -> b.setCompensation(employee.getCompensation()));
+                employee.getBenefits()
+                        .forEach(b -> b.setEmployee(employee));
 
                 employeeSupervisorMap.put(employee, csv.getSupervisorId());
 
@@ -230,7 +227,7 @@ public class EmployeeService {
                         }
                     }
 
-                    employee.getEmploymentDetails().setSupervisor(supervisor);
+                    employee.setSupervisor(supervisor);
                 }
             }
 
