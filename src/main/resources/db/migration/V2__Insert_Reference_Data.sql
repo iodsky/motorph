@@ -53,20 +53,12 @@ INSERT INTO user_role (role, created_at, updated_at, version) VALUES
                                                                   ('EMPLOYEE', NOW(), NOW(), 0);
 
 -- Insert super user employee
-INSERT INTO employee (id, first_name, last_name, birthday, address, phone_number, created_at, updated_at, version) VALUES
-    (10000, 'Super', 'User', '1990-01-15', '123 Test Street, Manila, Philippines', '+639171234567', NOW(), NOW(), 0);
+INSERT INTO employee (id, first_name, last_name, birthday, address, phone_number, supervisor_id, position_id, department_id, status, created_at, updated_at, version) VALUES
+    (10000, 'Super', 'User', '1990-01-15', '123 Test Street, Manila, Philippines', '+639171234567', NULL, 'ITOPSYS', 'IT', 'REGULAR', NOW(), NOW(), 0);
 
 -- Insert government ID for super user
 INSERT INTO government_id (id, employee_id, sss_no, tin_no, philhealth_no, pagibig_no, created_at, updated_at, version) VALUES
     ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 10000, '34-1234567-8', '123-456-789-000', '12-345678901-2', '1234-5678-9012', NOW(), NOW(), 0);
-
--- Insert employment details for super user
-INSERT INTO employment_details (id, employee_id, supervisor_id, position_id, department_id, status, created_at, updated_at, version) VALUES
-    ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 10000, NULL, 'ITOPSYS', 'IT', 'REGULAR', NOW(), NOW(), 0);
-
--- Insert compensation for super user
-INSERT INTO compensation (id, employee_id, basic_salary, hourly_rate, semi_monthly_rate, created_at, updated_at, version) VALUES
-    ('c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 10000, 50000.00, 297.62, 25000.00, NOW(), NOW(), 0);
 
 -- Insert super user account (password is 'password' encoded with bcrypt)
 INSERT INTO users (id, employee_id, email, password, role_id, created_at, updated_at, version) VALUES
