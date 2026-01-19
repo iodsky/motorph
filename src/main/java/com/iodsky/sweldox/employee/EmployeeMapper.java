@@ -20,13 +20,14 @@ public class EmployeeMapper implements CsvMapper<Employee, EmployeeCsvRecord> {
 
     public EmployeeDto toDto(Employee employee) {
 
-        Employee supervisor = employee.getEmploymentDetails().getSupervisor();
+        Employee supervisor = employee.getSupervisor();
         String supervisorName = supervisor != null ? supervisor.getFirstName() + " " + supervisor.getLastName() : "N/A";
 
-        List<BenefitDto> benefits = employee.getCompensation().getBenefits()
+        List<BenefitDto> benefits = employee.getBenefits()
                 .stream()
                 .map(benefitMapper::toDto)
                 .toList();
+
         return EmployeeDto.builder()
                 .id(employee.getId())
                 .firstName(employee.getFirstName())
@@ -38,15 +39,15 @@ public class EmployeeMapper implements CsvMapper<Employee, EmployeeCsvRecord> {
                 .tinNumber(employee.getGovernmentId().getTinNumber())
                 .philhealthNumber(employee.getGovernmentId().getPhilhealthNumber())
                 .pagIbigNumber(employee.getGovernmentId().getPagIbigNumber())
-                .status(employee.getEmploymentDetails().getStatus().toString())
+                .status(employee.getStatus().toString())
                 .supervisor(supervisorName)
-                .department(employee.getEmploymentDetails().getDepartment().getTitle())
-                .position(employee.getEmploymentDetails().getPosition().getTitle())
-                .startShift(employee.getEmploymentDetails().getStartShift())
-                .endShift(employee.getEmploymentDetails().getEndShift())
-                .basicSalary(employee.getCompensation().getBasicSalary())
-                .hourlyRate(employee.getCompensation().getHourlyRate())
-                .semiMonthlyRate(employee.getCompensation().getSemiMonthlyRate())
+                .department(employee.getDepartment().getTitle())
+                .position(employee.getPosition().getTitle())
+                .startShift(employee.getStartShift())
+                .endShift(employee.getEndShift())
+                .basicSalary(employee.getBasicSalary())
+                .hourlyRate(employee.getHourlyRate())
+                .semiMonthlyRate(employee.getSemiMonthlyRate())
                 .benefits(benefits)
                 .build();
     }
@@ -68,33 +69,23 @@ public class EmployeeMapper implements CsvMapper<Employee, EmployeeCsvRecord> {
                 .pagIbigNumber(request.getGovernmentId().getPagIbigNumber())
                 .build();
 
-        EmploymentDetails employmentDetails = EmploymentDetails.builder()
-                .employee(employee)
-                .status(request.getEmploymentDetails().getStatus())
-                .build();
-
-        BigDecimal basicSalary = request.getCompensation().getBasicSalary();
+        BigDecimal basicSalary = request.getBasicSalary();
         BigDecimal semiMonthlyRate = basicSalary.divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP);
         BigDecimal hourlyRate = basicSalary.divide(BigDecimal.valueOf(21.75).multiply(BigDecimal.valueOf(8)), 2, RoundingMode.HALF_UP);
 
-        Compensation compensation = Compensation.builder()
-                .employee(employee)
-                .basicSalary(basicSalary)
-                .semiMonthlyRate(semiMonthlyRate)
-                .hourlyRate(hourlyRate)
-                .build();
+        employee.setBasicSalary(basicSalary);
+        employee.setSemiMonthlyRate(semiMonthlyRate);
+        employee.setHourlyRate(hourlyRate);
 
-        List<Benefit> benefits = request.getCompensation().getBenefits()
+        List<Benefit> benefits = request.getBenefits()
                         .stream()
                         .map(benefitMapper::toEntity)
                         .toList();
 
-        benefits.forEach(b -> b.setCompensation(compensation));
-        compensation.setBenefits(benefits);
+        benefits.forEach(b -> b.setEmployee(employee));
+        employee.setBenefits(benefits);
 
         employee.setGovernmentId(governmentId);
-        employee.setEmploymentDetails(employmentDetails);
-        employee.setCompensation(compensation);
 
         return employee;
     }
@@ -119,35 +110,24 @@ public class EmployeeMapper implements CsvMapper<Employee, EmployeeCsvRecord> {
         gov.setPhilhealthNumber(request.getGovernmentId().getPhilhealthNumber());
         gov.setPagIbigNumber(request.getGovernmentId().getPagIbigNumber());
 
-        // --- EMPLOYMENT DETAILS ---
-        if (existing.getEmploymentDetails() == null) {
-            existing.setEmploymentDetails(new EmploymentDetails());
-            existing.getEmploymentDetails().setEmployee(existing);
-        }
-        EmploymentDetails details = existing.getEmploymentDetails();
-        details.setStatus(request.getEmploymentDetails().getStatus());
+        existing.setStatus(request.getStatus());
+        existing.setStartShift(request.getStartShift());
+        existing.setEndShift(request.getEndShift());
 
-        // --- COMPENSATION ---
-        if (existing.getCompensation() == null) {
-            existing.setCompensation(new Compensation());
-            existing.getCompensation().setEmployee(existing);
-        }
-
-        BigDecimal basicSalary = request.getCompensation().getBasicSalary();
+        BigDecimal basicSalary = request.getBasicSalary();
         BigDecimal semiMonthlyRate = basicSalary.divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP);
         BigDecimal hourlyRate = basicSalary.divide(BigDecimal.valueOf(21.75).multiply(BigDecimal.valueOf(8)), 2, RoundingMode.HALF_UP);
 
-        Compensation comp = existing.getCompensation();
-        comp.setBasicSalary(basicSalary);
-        comp.setSemiMonthlyRate(semiMonthlyRate);
-        comp.setHourlyRate(hourlyRate);
+        existing.setBasicSalary(basicSalary);
+        existing.setSemiMonthlyRate(semiMonthlyRate);
+        existing.setHourlyRate(hourlyRate);
 
-        List<Benefit> benefits = request.getCompensation().getBenefits().stream()
+        List<Benefit> benefits = request.getBenefits().stream()
                 .map(benefitMapper::toEntity)
                 .toList();
-        benefits.forEach(b -> b.setCompensation(comp));
-        comp.getBenefits().clear();
-        comp.getBenefits().addAll(benefits);
+        benefits.forEach(b -> b.setEmployee(existing));
+        existing.getBenefits().clear();
+        existing.getBenefits().addAll(benefits);
     }
 
     @Override
@@ -171,21 +151,13 @@ public class EmployeeMapper implements CsvMapper<Employee, EmployeeCsvRecord> {
         LocalTime startShift = csv.getStartShift() == null ? LocalTime.of(8, 0) : csv.getStartShift();
         LocalTime endShift = csv.getEndShift() == null ? LocalTime.of(17, 0) : csv.getEndShift();
 
-        EmploymentDetails employmentDetails = EmploymentDetails.builder()
-                .employee(employee)
-                .status(Status.valueOf(csv.getStatus().toUpperCase()))
-                .startShift(startShift)
-                .endShift(endShift)
-                .build();
-        employee.setEmploymentDetails(employmentDetails);
+        employee.setStatus(Status.valueOf(csv.getStatus().toUpperCase()));
+        employee.setStartShift(startShift);
+        employee.setEndShift(endShift);
 
-        Compensation compensation = Compensation.builder()
-                .employee(employee)
-                .basicSalary(csv.getBasicSalary())
-                .semiMonthlyRate(csv.getSemiMonthlyRate())
-                .hourlyRate(csv.getHourlyRate())
-                .build();
-        employee.setCompensation(compensation);
+        employee.setBasicSalary(csv.getBasicSalary());
+        employee.setSemiMonthlyRate(csv.getSemiMonthlyRate());
+        employee.setHourlyRate(csv.getHourlyRate());
 
         return employee;
     }
