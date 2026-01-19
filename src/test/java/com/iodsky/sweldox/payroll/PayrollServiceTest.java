@@ -5,7 +5,6 @@ import com.iodsky.sweldox.attendance.AttendanceService;
 import com.iodsky.sweldox.common.DateRange;
 import com.iodsky.sweldox.common.DateRangeResolver;
 import com.iodsky.sweldox.employee.EmployeeService;
-import com.iodsky.sweldox.employee.Compensation;
 import com.iodsky.sweldox.employee.Employee;
 import com.iodsky.sweldox.security.user.User;
 import com.iodsky.sweldox.security.user.UserRole;
@@ -52,7 +51,6 @@ class PayrollServiceTest {
     private User normalUser;
     private Employee employee;
     private Employee otherEmployee;
-    private Compensation compensation;
     private Payroll payroll;
     private DeductionType sssType;
     private DeductionType phicType;
@@ -65,6 +63,7 @@ class PayrollServiceTest {
     private static final LocalDate PERIOD_END = LocalDate.of(2025, 11, 15);
     private static final LocalDate PAY_DATE = LocalDate.of(2025, 11, 20);
     private static final BigDecimal BASIC_SALARY = new BigDecimal("30000.00");
+    private static final BigDecimal SEMI_MONTHLY_RATE = new BigDecimal("30000.00");
     private static final BigDecimal HOURLY_RATE = new BigDecimal("178.57");
 
     @BeforeEach
@@ -92,16 +91,10 @@ class PayrollServiceTest {
                 .amount(new BigDecimal("2000.00"))
                 .build();
 
-        compensation = Compensation.builder()
-                .id(UUID.randomUUID())
-                .employee(employee)
-                .basicSalary(BASIC_SALARY)
-                .hourlyRate(HOURLY_RATE)
-                .semiMonthlyRate(new BigDecimal("15000.00"))
-                .benefits(List.of(riceBenefit))
-                .build();
-
-        employee.setCompensation(compensation);
+        employee.setBasicSalary(BASIC_SALARY);
+        employee.setHourlyRate(HOURLY_RATE);
+        employee.setSemiMonthlyRate(SEMI_MONTHLY_RATE);
+        employee.setBenefits(List.of(riceBenefit));
 
         // Setup deduction types
         sssType = DeductionType.builder()
@@ -718,14 +711,7 @@ class PayrollServiceTest {
 
         @Test
         void shouldHandleNullBenefitsList() {
-            Compensation compWithNoBenefits = Compensation.builder()
-                    .id(UUID.randomUUID())
-                    .employee(employee)
-                    .basicSalary(BASIC_SALARY)
-                    .hourlyRate(HOURLY_RATE)
-                    .benefits(Collections.emptyList())
-                    .build();
-            employee.setCompensation(compWithNoBenefits);
+            employee.setBenefits(Collections.emptyList());
 
             List<Attendance> attendances = createMockAttendances(10);
 
@@ -752,14 +738,8 @@ class PayrollServiceTest {
 
         @Test
         void shouldHandleVeryLowSalaryEmployee() {
-            Compensation lowSalaryComp = Compensation.builder()
-                    .id(UUID.randomUUID())
-                    .employee(employee)
-                    .basicSalary(new BigDecimal("5000.00"))
-                    .hourlyRate(new BigDecimal("29.76"))
-                    .benefits(Collections.emptyList())
-                    .build();
-            employee.setCompensation(lowSalaryComp);
+            employee.setBasicSalary(new BigDecimal("5000.00"));
+            employee.setHourlyRate(new BigDecimal("29.76"));
 
             List<Attendance> attendances = createMockAttendances(5);
 
