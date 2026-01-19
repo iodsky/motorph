@@ -61,6 +61,15 @@ CREATE TABLE IF NOT EXISTS employee (
     birthday DATE,
     address VARCHAR(255) UNIQUE,
     phone_number VARCHAR(255) UNIQUE,
+    supervisor_id BIGINT,
+    position_id VARCHAR(20),
+    department_id VARCHAR(20),
+    status VARCHAR(50),
+    basic_salary NUMERIC(19, 2),
+    hourly_rate NUMERIC(19, 2),
+    semi_monthly_rate NUMERIC(19, 2),
+    start_shift TIME,
+    end_shift TIME,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP,
     deleted_at TIMESTAMP,
@@ -86,46 +95,10 @@ CREATE TABLE IF NOT EXISTS government_id (
     CONSTRAINT fk_government_id_employee FOREIGN KEY (employee_id) REFERENCES employee(id)
 );
 
--- Create employment_details table
-CREATE TABLE IF NOT EXISTS employment_details (
-    id UUID PRIMARY KEY,
-    employee_id BIGINT NOT NULL,
-    supervisor_id BIGINT,
-    position_id VARCHAR(20) NOT NULL,
-    department_id VARCHAR(20) NOT NULL,
-    status VARCHAR(50),
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP,
-    deleted_at TIMESTAMP,
-    created_by UUID,
-    last_modified_by UUID,
-    version BIGINT,
-    CONSTRAINT fk_employment_details_employee FOREIGN KEY (employee_id) REFERENCES employee(id),
-    CONSTRAINT fk_employment_details_supervisor FOREIGN KEY (supervisor_id) REFERENCES employee(id),
-    CONSTRAINT fk_employment_details_position FOREIGN KEY (position_id) REFERENCES position(id),
-    CONSTRAINT fk_employment_details_department FOREIGN KEY (department_id) REFERENCES department(id)
-);
-
--- Create compensation table
-CREATE TABLE IF NOT EXISTS compensation (
-    id UUID PRIMARY KEY,
-    employee_id BIGINT NOT NULL,
-    basic_salary NUMERIC(19, 2),
-    hourly_rate NUMERIC(19, 2),
-    semi_monthly_rate NUMERIC(19, 2),
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP,
-    deleted_at TIMESTAMP,
-    created_by UUID,
-    last_modified_by UUID,
-    version BIGINT,
-    CONSTRAINT fk_compensation_employee FOREIGN KEY (employee_id) REFERENCES employee(id)
-);
-
 -- Create benefit table
 CREATE TABLE IF NOT EXISTS benefit (
     id UUID PRIMARY KEY,
-    compensation_id UUID NOT NULL,
+    employee_id BIGINT NOT NULL,
     benefit_type_id VARCHAR(255) NOT NULL,
     amount NUMERIC(19, 2),
     created_at TIMESTAMP NOT NULL,
@@ -134,7 +107,7 @@ CREATE TABLE IF NOT EXISTS benefit (
     created_by UUID,
     last_modified_by UUID,
     version BIGINT,
-    CONSTRAINT fk_benefit_compensation FOREIGN KEY (compensation_id) REFERENCES compensation(id),
+    CONSTRAINT fk_benefit_employee FOREIGN KEY (employee_id) REFERENCES employee(id),
     CONSTRAINT fk_benefit_type FOREIGN KEY (benefit_type_id) REFERENCES benefit_type(id)
 );
 
@@ -179,22 +152,16 @@ ALTER TABLE position
 -- Add foreign keys for created_by and last_modified_by in employee
 ALTER TABLE employee
     ADD CONSTRAINT fk_employee_created_by FOREIGN KEY (created_by) REFERENCES users(id),
-    ADD CONSTRAINT fk_employee_last_modified_by FOREIGN KEY (last_modified_by) REFERENCES users(id);
+    ADD CONSTRAINT fk_employee_last_modified_by FOREIGN KEY (last_modified_by) REFERENCES users(id),
+    ADD CONSTRAINT fk_employee_supervisor FOREIGN KEY (supervisor_id) REFERENCES employee(id),
+    ADD CONSTRAINT fk_employee_position FOREIGN KEY (position_id) REFERENCES position(id),
+    ADD CONSTRAINT fk_employee_department FOREIGN KEY (department_id) REFERENCES department(id);
 
 -- Add foreign keys for created_by and last_modified_by in government_id
 ALTER TABLE government_id
     ADD CONSTRAINT fk_government_id_created_by FOREIGN KEY (created_by) REFERENCES users(id),
     ADD CONSTRAINT fk_government_id_last_modified_by FOREIGN KEY (last_modified_by) REFERENCES users(id);
 
--- Add foreign keys for created_by and last_modified_by in employment_details
-ALTER TABLE employment_details
-    ADD CONSTRAINT fk_employment_details_created_by FOREIGN KEY (created_by) REFERENCES users(id),
-    ADD CONSTRAINT fk_employment_details_last_modified_by FOREIGN KEY (last_modified_by) REFERENCES users(id);
-
--- Add foreign keys for created_by and last_modified_by in compensation
-ALTER TABLE compensation
-    ADD CONSTRAINT fk_compensation_created_by FOREIGN KEY (created_by) REFERENCES users(id),
-    ADD CONSTRAINT fk_compensation_last_modified_by FOREIGN KEY (last_modified_by) REFERENCES users(id);
 
 -- Add foreign keys for created_by and last_modified_by in benefit
 ALTER TABLE benefit
@@ -348,6 +315,10 @@ CREATE TABLE IF NOT EXISTS payroll_benefits (
 -- Create indexes for better query performance
 CREATE INDEX idx_employee_first_name ON employee(first_name);
 CREATE INDEX idx_employee_last_name ON employee(last_name);
+CREATE INDEX idx_employee_supervisor ON employee(supervisor_id);
+CREATE INDEX idx_employee_position ON employee(position_id);
+CREATE INDEX idx_employee_department ON employee(department_id);
+CREATE INDEX idx_benefit_employee ON benefit(employee_id);
 CREATE INDEX idx_attendance_date ON attendance(date);
 CREATE INDEX idx_attendance_employee_date ON attendance(employee_id, date);
 CREATE INDEX idx_leave_request_employee ON leave_request(employee_id);
