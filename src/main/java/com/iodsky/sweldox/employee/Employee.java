@@ -2,10 +2,16 @@ package com.iodsky.sweldox.employee;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.iodsky.sweldox.common.BaseModel;
+import com.iodsky.sweldox.organization.Department;
+import com.iodsky.sweldox.organization.Position;
+import com.iodsky.sweldox.payroll.Benefit;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
 
 @Entity
 @Table(name = "employee")
@@ -44,12 +50,37 @@ public class Employee extends BaseModel {
     @JsonIgnore
     private GovernmentId governmentId;
 
-    @OneToOne(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ManyToOne
+    @JoinColumn(name = "supervisor_id", nullable = true)
     @JsonIgnore
-    private EmploymentDetails employmentDetails;
+    private Employee supervisor;
 
-    @OneToOne(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ManyToOne
+    @JoinColumn(name = "position_id")
+    private Position position;
+
+    @ManyToOne
+    @JoinColumn(name = "department_id")
+    private Department department;
+
+    @Enumerated(EnumType.STRING)
+    private Status status;
+
+    private LocalTime startShift;
+
+    private LocalTime endShift;
+
+    @Column(name = "basic_salary")
+    private BigDecimal basicSalary;
+
+    @Column(name = "hourly_rate")
+    private BigDecimal hourlyRate;
+
+    @Column(name = "semi_monthly_rate")
+    private BigDecimal semiMonthlyRate;
+
+    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JsonIgnore
-    private Compensation compensation;
+    private List<Benefit> benefits;
 
 }
