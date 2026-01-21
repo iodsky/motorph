@@ -1,8 +1,5 @@
 package com.iodsky.sweldox.security.user;
 
-import com.iodsky.sweldox.common.exception.CsvImportException;
-import com.iodsky.sweldox.csvimport.CsvResult;
-import com.iodsky.sweldox.csvimport.CsvService;
 import com.iodsky.sweldox.employee.EmployeeService;
 import com.iodsky.sweldox.employee.Employee;
 import lombok.RequiredArgsConstructor;
@@ -16,12 +13,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.io.IOException;
-import java.util.LinkedHashSet;
-import java.util.stream.Collectors;
 
 
 @Service
@@ -33,7 +25,6 @@ public class UserService implements UserDetailsService {
     private final UserMapper userMapper;
     private final EmployeeService employeeService;
     private final PasswordEncoder passwordEncoder;
-    private final CsvService<User, UserCsvRecord> userCsvService;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -54,35 +45,6 @@ public class UserService implements UserDetailsService {
         user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
 
         return userRepository.save(user);
-    }
-
-    public Integer importUsers(MultipartFile file) {
-        try {
-            LinkedHashSet<CsvResult<User, UserCsvRecord>> records =
-                    userCsvService.parseCsv(file.getInputStream(), UserCsvRecord.class);
-
-            LinkedHashSet<User> users = records.stream().map(r -> {
-                        User user = r.entity();
-                        UserCsvRecord csv = r.source();
-
-                        Employee employee = employeeService.getEmployeeById(csv.getEmployeeId());
-                        UserRole role = getUserRole(csv.getRole());
-
-                        user.setEmployee(employee);
-                        user.setUserRole(role);
-
-                        user.setPassword(passwordEncoder.encode(user.getPassword()));
-
-                        return user;
-                    })
-                    .filter(u -> !userRepository.existsByEmail(u.getEmail()))
-                    .collect(Collectors.toCollection(LinkedHashSet::new));
-
-            userRepository.saveAll(users);
-            return users.size();
-        } catch (IOException e) {
-            throw new CsvImportException(e.getMessage());
-        }
     }
 
     public Page<User> getAllUsers(int size, int limit, String role) {

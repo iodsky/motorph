@@ -15,7 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -39,18 +38,6 @@ public class EmployeeController {
     public ResponseEntity<ApiResponse<EmployeeDto>> createEmployee(@Valid @RequestBody EmployeeRequest request) {
         EmployeeDto employee = employeeMapper.toDto(employeeService.createEmployee(request));
         return ResponseFactory.created("Employee created successfully", employee);
-    }
-
-    @PreAuthorize("hasAnyRole('HR', 'IT')")
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(
-            summary = "Import employees from CSV",
-            description = "Bulk import employees from a CSV file. Requires HR or IT role. Returns the count of imported employees.",
-            operationId = "importEmployees"
-    )
-    public ResponseEntity<ApiResponse<BatchResponse>> importEmployees(@RequestPart("file") MultipartFile file) {
-        Integer count = employeeService.importEmployees(file);
-        return ResponseFactory.ok("Employees imported successfully", new BatchResponse(count));
     }
 
     @PreAuthorize("hasAnyRole('HR', 'IT', 'PAYROLL')")

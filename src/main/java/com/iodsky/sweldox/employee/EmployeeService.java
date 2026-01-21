@@ -1,17 +1,13 @@
 package com.iodsky.sweldox.employee;
 
 import com.iodsky.sweldox.common.DuplicateField;
-import com.iodsky.sweldox.common.exception.CsvImportException;
 import com.iodsky.sweldox.common.exception.DuplicateFieldException;
-import com.iodsky.sweldox.csvimport.CsvResult;
-import com.iodsky.sweldox.csvimport.CsvService;
 import com.iodsky.sweldox.organization.Department;
 import com.iodsky.sweldox.organization.DepartmentService;
 import com.iodsky.sweldox.organization.Position;
 import com.iodsky.sweldox.organization.PositionService;
 import com.iodsky.sweldox.payroll.BenefitService;
 import com.iodsky.sweldox.payroll.Benefit;
-import com.iodsky.sweldox.payroll.BenefitType;
 import com.iodsky.sweldox.security.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -22,15 +18,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -41,7 +34,6 @@ public class EmployeeService {
     private final DepartmentService departmentService;
     private final PositionService positionService;
     private final BenefitService benefitService;
-    private final CsvService<Employee, EmployeeCsvRecord> employeeCsvService;
 
     @Transactional
     public Employee createEmployee(EmployeeRequest request) {
@@ -156,88 +148,6 @@ public class EmployeeService {
 
     public List<Long> getAllActiveEmployeeIds() {
         return employeeRepository.findAllActiveEmployeeIds();
-    }
-
-    @Transactional
-    public Integer importEmployees(MultipartFile file) {
-        try {
-            LinkedHashSet<CsvResult<Employee, EmployeeCsvRecord>> records =
-                    employeeCsvService.parseCsv(file.getInputStream(), EmployeeCsvRecord.class);
-
-            BenefitType mealBenefitType = benefitService.getBenefitTypeById("MEAL");
-            BenefitType clothingBenefitType = benefitService.getBenefitTypeById("CLOTHING");
-            BenefitType phoneBenefitType = benefitService.getBenefitTypeById("PHONE");
-
-            Set<String> positionTitles = records.stream()
-                    .map(r -> r.source().getPosition())
-                    .collect(Collectors.toSet());
-            Map<String, Position> positionMap = positionService.getPositionsByTitles(positionTitles);
-
-            Map<Employee, Long> employeeSupervisorMap = new HashMap<>();
-
-            LinkedHashSet<Employee> employees = records.stream().map(r -> {
-                Employee employee = r.entity();
-                EmployeeCsvRecord csv = r.source();
-
-                Position position = positionMap.get(csv.getPosition());
-                employee.setPosition(position);
-                employee.setDepartment(position.getDepartment());
-
-                Benefit mealAllowance = Benefit.builder()
-                        .benefitType(mealBenefitType)
-                        .amount(csv.getMealAllowance())
-                        .build();
-
-                Benefit clothingAllowance = Benefit.builder()
-                        .benefitType(clothingBenefitType)
-                        .amount(csv.getClothingAllowance())
-                        .build();
-
-                Benefit phoneAllowance = Benefit.builder()
-                        .benefitType(phoneBenefitType)
-                        .amount(csv.getPhoneAllowance())
-                        .build();
-
-                employee.setBenefits(
-                        new ArrayList<>(List.of(mealAllowance, phoneAllowance, clothingAllowance))
-                );
-                employee.getBenefits()
-                        .forEach(b -> b.setEmployee(employee));
-
-                employeeSupervisorMap.put(employee, csv.getSupervisorId());
-
-                return employee;
-            }).collect(Collectors.toCollection(LinkedHashSet::new));
-
-            List<Employee> savedEmployees = employeeRepository.saveAll(employees);
-
-            Map<Long, Employee> employeeIdMap = savedEmployees.stream()
-                    .collect(Collectors.toMap(Employee::getId, e -> e));
-
-            // Set supervisor relationships
-            for (Employee employee : savedEmployees) {
-                Long supervisorId = employeeSupervisorMap.get(employee);
-                if (supervisorId != null) {
-                    Employee supervisor = employeeIdMap.get(supervisorId);
-
-                    if (supervisor == null) {
-                        try {
-                            supervisor = getEmployeeById(supervisorId);
-                        } catch (ResponseStatusException e) {
-                            continue;
-                        }
-                    }
-
-                    employee.setSupervisor(supervisor);
-                }
-            }
-
-            employeeRepository.saveAll(savedEmployees);
-
-            return savedEmployees.size();
-        } catch (IOException e) {
-            throw new CsvImportException(e.getMessage());
-        }
     }
 
     private DuplicateFieldException handleDataIntegrityViolation(DataIntegrityViolationException ex) {

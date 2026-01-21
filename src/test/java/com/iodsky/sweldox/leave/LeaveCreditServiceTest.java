@@ -1,8 +1,5 @@
 package com.iodsky.sweldox.leave;
 
-import com.iodsky.sweldox.common.exception.CsvImportException;
-import com.iodsky.sweldox.csvimport.CsvResult;
-import com.iodsky.sweldox.csvimport.CsvService;
 import com.iodsky.sweldox.employee.EmployeeService;
 import com.iodsky.sweldox.employee.Employee;
 import com.iodsky.sweldox.security.user.User;
@@ -18,13 +15,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -39,7 +31,6 @@ class LeaveCreditServiceTest {
 
     @Mock private LeaveCreditRepository leaveCreditRepository;
     @Mock private EmployeeService employeeService;
-    @Mock private CsvService<LeaveCredit, LeaveCreditCsvRecord> leaveCreditCsvService;
     @InjectMocks private LeaveCreditService leaveCreditService;
 
     private User normalUser;
@@ -400,120 +391,5 @@ class LeaveCreditServiceTest {
         }
     }
 
-    @Nested
-    class ImportLeaveCreditsTests {
-
-        @Test
-        void shouldImportLeaveCreditsSuccessfully() throws IOException {
-            MultipartFile file = mock(MultipartFile.class);
-            InputStream inputStream = new ByteArrayInputStream("test data".getBytes());
-            when(file.getInputStream()).thenReturn(inputStream);
-
-            LeaveCreditCsvRecord csvRecord1 = new LeaveCreditCsvRecord();
-            csvRecord1.setEmployeeId(1L);
-            csvRecord1.setType("VACATION");
-            csvRecord1.setCredits(10.0);
-
-            LeaveCreditCsvRecord csvRecord2 = new LeaveCreditCsvRecord();
-            csvRecord2.setEmployeeId(1L);
-            csvRecord2.setType("SICK");
-            csvRecord2.setCredits(5.0);
-
-            LeaveCredit entity1 = LeaveCredit.builder()
-                    .credits(10.0)
-                    .build();
-
-            LeaveCredit entity2 = LeaveCredit.builder()
-                    .credits(5.0)
-                    .build();
-
-            CsvResult<LeaveCredit, LeaveCreditCsvRecord> result1 = new CsvResult<>(entity1, csvRecord1);
-            CsvResult<LeaveCredit, LeaveCreditCsvRecord> result2 = new CsvResult<>(entity2, csvRecord2);
-
-            LinkedHashSet<CsvResult<LeaveCredit, LeaveCreditCsvRecord>> csvResults = new LinkedHashSet<>();
-            csvResults.add(result1);
-            csvResults.add(result2);
-
-            when(leaveCreditCsvService.parseCsv(any(InputStream.class), eq(LeaveCreditCsvRecord.class)))
-                    .thenReturn(csvResults);
-            when(employeeService.getEmployeeById(1L)).thenReturn(employee);
-            when(leaveCreditRepository.saveAll(any())).thenReturn(List.of(entity1, entity2));
-
-            Integer count = leaveCreditService.importLeaveCredits(file);
-
-            assertEquals(2, count);
-            verify(leaveCreditRepository).saveAll(any());
-        }
-
-        @Test
-        void shouldThrowBadRequestWhenInvalidLeaveType() throws IOException {
-            MultipartFile file = mock(MultipartFile.class);
-            InputStream inputStream = new ByteArrayInputStream("test data".getBytes());
-            when(file.getInputStream()).thenReturn(inputStream);
-
-            LeaveCreditCsvRecord csvRecord = new LeaveCreditCsvRecord();
-            csvRecord.setEmployeeId(1L);
-            csvRecord.setType("INVALID_TYPE");
-            csvRecord.setCredits(10.0);
-
-            LeaveCredit entity = LeaveCredit.builder()
-                    .credits(10.0)
-                    .build();
-
-            CsvResult<LeaveCredit, LeaveCreditCsvRecord> result = new CsvResult<>(entity, csvRecord);
-
-            LinkedHashSet<CsvResult<LeaveCredit, LeaveCreditCsvRecord>> csvResults = new LinkedHashSet<>();
-            csvResults.add(result);
-
-            when(leaveCreditCsvService.parseCsv(any(InputStream.class), eq(LeaveCreditCsvRecord.class)))
-                    .thenReturn(csvResults);
-            when(employeeService.getEmployeeById(1L)).thenReturn(employee);
-
-            ResponseStatusException ex = assertThrows(ResponseStatusException.class, () ->
-                    leaveCreditService.importLeaveCredits(file));
-
-            assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
-            assertTrue(ex.getMessage().contains("Invalid leave type"));
-        }
-
-        @Test
-        void shouldThrowCsvImportExceptionWhenIOExceptionOccurs() throws IOException {
-            MultipartFile file = mock(MultipartFile.class);
-            when(file.getInputStream()).thenThrow(new IOException("File read error"));
-
-            assertThrows(CsvImportException.class, () ->
-                    leaveCreditService.importLeaveCredits(file));
-        }
-
-        @Test
-        void shouldResolveEmployeeCorrectly() throws IOException {
-            MultipartFile file = mock(MultipartFile.class);
-            InputStream inputStream = new ByteArrayInputStream("test data".getBytes());
-            when(file.getInputStream()).thenReturn(inputStream);
-
-            LeaveCreditCsvRecord csvRecord = new LeaveCreditCsvRecord();
-            csvRecord.setEmployeeId(1L);
-            csvRecord.setType("VACATION");
-            csvRecord.setCredits(10.0);
-
-            LeaveCredit entity = LeaveCredit.builder()
-                    .credits(10.0)
-                    .build();
-
-            CsvResult<LeaveCredit, LeaveCreditCsvRecord> result = new CsvResult<>(entity, csvRecord);
-
-            LinkedHashSet<CsvResult<LeaveCredit, LeaveCreditCsvRecord>> csvResults = new LinkedHashSet<>();
-            csvResults.add(result);
-
-            when(leaveCreditCsvService.parseCsv(any(InputStream.class), eq(LeaveCreditCsvRecord.class)))
-                    .thenReturn(csvResults);
-            when(employeeService.getEmployeeById(1L)).thenReturn(employee);
-            when(leaveCreditRepository.saveAll(any())).thenReturn(List.of(entity));
-
-            leaveCreditService.importLeaveCredits(file);
-
-            verify(employeeService).getEmployeeById(1L);
-        }
-    }
 }
 

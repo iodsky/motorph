@@ -1,6 +1,5 @@
 package com.iodsky.sweldox.employee;
 
-import com.iodsky.sweldox.csvimport.CsvMapper;
 import com.iodsky.sweldox.payroll.BenefitDto;
 import com.iodsky.sweldox.payroll.BenefitMapper;
 import com.iodsky.sweldox.payroll.Benefit;
@@ -15,7 +14,7 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class EmployeeMapper implements CsvMapper<Employee, EmployeeCsvRecord> {
+public class EmployeeMapper  {
 
     private final BenefitMapper benefitMapper;
 
@@ -145,35 +144,4 @@ public class EmployeeMapper implements CsvMapper<Employee, EmployeeCsvRecord> {
         existing.getBenefits().addAll(benefits);
     }
 
-    @Override
-    public Employee toEntity(EmployeeCsvRecord csv) {
-        Employee employee = Employee.builder()
-                .firstName(csv.getFirstName())
-                .lastName(csv.getLastName())
-                .birthday(csv.getBirthday())
-                .address(csv.getAddress())
-                .phoneNumber(csv.getPhoneNumber()).build();
-
-        GovernmentId governmentId = GovernmentId.builder()
-                .employee(employee)
-                .sssNumber(csv.getSssId())
-                .philhealthNumber(csv.getPhilhealthId())
-                .tinNumber(csv.getTinId())
-                .pagIbigNumber(csv.getPagibigId())
-                .build();
-        employee.setGovernmentId(governmentId);
-
-        LocalTime startShift = csv.getStartShift() == null ? LocalTime.of(8, 0) : csv.getStartShift();
-        LocalTime endShift = csv.getEndShift() == null ? LocalTime.of(17, 0) : csv.getEndShift();
-
-        employee.setStatus(Status.valueOf(csv.getStatus().toUpperCase()));
-        employee.setStartShift(startShift);
-        employee.setEndShift(endShift);
-
-        employee.setBasicSalary(csv.getBasicSalary());
-        employee.setSemiMonthlyRate(csv.getSemiMonthlyRate());
-        employee.setHourlyRate(csv.getHourlyRate());
-
-        return employee;
-    }
 }

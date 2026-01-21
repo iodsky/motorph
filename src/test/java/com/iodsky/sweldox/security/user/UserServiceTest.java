@@ -1,8 +1,5 @@
 package com.iodsky.sweldox.security.user;
 
-import com.iodsky.sweldox.common.exception.CsvImportException;
-import com.iodsky.sweldox.csvimport.CsvResult;
-import com.iodsky.sweldox.csvimport.CsvService;
 import com.iodsky.sweldox.employee.EmployeeService;
 import com.iodsky.sweldox.employee.Employee;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,14 +13,10 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -37,7 +30,6 @@ class UserServiceTest {
     @Mock private UserMapper userMapper;
     @Mock private EmployeeService employeeService;
     @Mock private PasswordEncoder passwordEncoder;
-    @Mock private CsvService<User, UserCsvRecord> csvService;
 
     @InjectMocks private UserService userService;
 
@@ -211,117 +203,5 @@ class UserServiceTest {
     class GetUserRoleTests {
 
     }
-    @Nested
-    class ImportUsersTests {
 
-        private UserCsvRecord csvRecord;
-        private User csvUser;
-
-        @BeforeEach
-        void setUpImportTests() {
-            csvRecord = new UserCsvRecord();
-            csvRecord.setEmployeeId(1L);
-            csvRecord.setRole("HR");
-
-            csvUser = new User();
-            csvUser.setEmail("csv.user@example.com");
-            csvUser.setPassword("plainPassword");
-        }
-
-        @Test
-        void shouldImportUsersSuccessfully() throws IOException {
-            CsvResult<User, UserCsvRecord> csvResult = new CsvResult<>(csvUser, csvRecord);
-            LinkedHashSet<CsvResult<User, UserCsvRecord>> records = new LinkedHashSet<>(Set.of(csvResult));
-
-            MockMultipartFile file = new MockMultipartFile(
-                    "file", "users.csv", "text/csv", "csv content".getBytes());
-
-            when(csvService.parseCsv(any(InputStream.class), eq(UserCsvRecord.class))).thenReturn(records);
-            when(employeeService.getEmployeeById(1L)).thenReturn(employee);
-            when(userRoleRepository.findById("HR")).thenReturn(Optional.of(role));
-            when(passwordEncoder.encode("plainPassword")).thenReturn("encodedPassword");
-            when(userRepository.existsByEmail("csv.user@example.com")).thenReturn(false);
-            when(userRepository.saveAll(anySet())).thenReturn(List.of(csvUser));
-
-            Integer result = userService.importUsers(file);
-
-            assertEquals(1, result);
-            verify(csvService).parseCsv(any(InputStream.class), eq(UserCsvRecord.class));
-            verify(userRepository).saveAll(anySet());
-        }
-
-        @Test
-        void shouldFilterOutExistingUsers() throws IOException {
-            CsvResult<User, UserCsvRecord> csvResult = new CsvResult<>(csvUser, csvRecord);
-            LinkedHashSet<CsvResult<User, UserCsvRecord>> records = new LinkedHashSet<>(Set.of(csvResult));
-
-            MockMultipartFile file = new MockMultipartFile(
-                    "file", "users.csv", "text/csv", "csv content".getBytes());
-
-            when(csvService.parseCsv(any(InputStream.class), eq(UserCsvRecord.class))).thenReturn(records);
-            when(employeeService.getEmployeeById(1L)).thenReturn(employee);
-            when(userRoleRepository.findById("HR")).thenReturn(Optional.of(role));
-            when(passwordEncoder.encode(anyString())).thenReturn("encoded");
-            when(userRepository.existsByEmail("csv.user@example.com")).thenReturn(true);
-            when(userRepository.saveAll(anySet())).thenReturn(List.of());
-
-            Integer result = userService.importUsers(file);
-
-            assertEquals(0, result);
-            verify(userRepository).saveAll(argThat(set -> ((Set<?>) set).isEmpty()));
-        }
-
-        @Test
-        void shouldEncodePasswordsForImportedUsers() throws IOException {
-            CsvResult<User, UserCsvRecord> csvResult = new CsvResult<>(csvUser, csvRecord);
-            LinkedHashSet<CsvResult<User, UserCsvRecord>> records = new LinkedHashSet<>(Set.of(csvResult));
-
-            MockMultipartFile file = new MockMultipartFile(
-                    "file", "users.csv", "text/csv", "csv content".getBytes());
-
-            when(csvService.parseCsv(any(InputStream.class), eq(UserCsvRecord.class))).thenReturn(records);
-            when(employeeService.getEmployeeById(1L)).thenReturn(employee);
-            when(userRoleRepository.findById("HR")).thenReturn(Optional.of(role));
-            when(passwordEncoder.encode("plainPassword")).thenReturn("ENCODED_PASSWORD");
-            when(userRepository.existsByEmail(anyString())).thenReturn(false);
-            when(userRepository.saveAll(anySet())).thenReturn(List.of(csvUser));
-
-            userService.importUsers(file);
-
-            verify(passwordEncoder).encode("plainPassword");
-        }
-
-        @Test
-        void shouldWrapIOExceptionInCsvImportException() throws IOException {
-            MultipartFile file = mock(MultipartFile.class);
-            when(file.getInputStream()).thenThrow(new IOException("File read error"));
-
-            CsvImportException ex = assertThrows(CsvImportException.class,
-                    () -> userService.importUsers(file));
-
-            assertEquals("File read error", ex.getMessage());
-            verifyNoInteractions(csvService, employeeService, userRoleRepository, passwordEncoder, userRepository);
-        }
-
-        @Test
-        void shouldSetEmployeeAndRoleForEachImportedUser() throws IOException {
-            CsvResult<User, UserCsvRecord> csvResult = new CsvResult<>(csvUser, csvRecord);
-            LinkedHashSet<CsvResult<User, UserCsvRecord>> records = new LinkedHashSet<>(Set.of(csvResult));
-
-            MockMultipartFile file = new MockMultipartFile(
-                    "file", "users.csv", "text/csv", "csv content".getBytes());
-
-            when(csvService.parseCsv(any(InputStream.class), eq(UserCsvRecord.class))).thenReturn(records);
-            when(employeeService.getEmployeeById(1L)).thenReturn(employee);
-            when(userRoleRepository.findById("HR")).thenReturn(Optional.of(role));
-            when(passwordEncoder.encode(anyString())).thenReturn("encoded");
-            when(userRepository.existsByEmail(anyString())).thenReturn(false);
-            when(userRepository.saveAll(anySet())).thenReturn(List.of(csvUser));
-
-            userService.importUsers(file);
-
-            verify(employeeService).getEmployeeById(1L);
-            verify(userRoleRepository).findById("HR");
-        }
-    }
 }

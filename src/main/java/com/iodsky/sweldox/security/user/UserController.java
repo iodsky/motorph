@@ -1,7 +1,6 @@
 package com.iodsky.sweldox.security.user;
 
 import com.iodsky.sweldox.common.response.ApiResponse;
-import com.iodsky.sweldox.common.response.BatchResponse;
 import com.iodsky.sweldox.common.response.PaginationMeta;
 import com.iodsky.sweldox.common.response.ResponseFactory;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,7 +15,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -39,17 +37,6 @@ public class UserController {
     public ResponseEntity<ApiResponse<UserDto>> createUser(@Valid @RequestBody UserRequest userRequest) {
         UserDto user = userMapper.toDto(userService.createUser(userRequest));
         return ResponseFactory.created("User created successfully", user);
-    }
-
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(
-            summary = "Import users from CSV",
-            description = "Bulk import user accounts from a CSV file. Requires IT role. Returns the count of imported users.",
-            operationId = "importUsers"
-    )
-    public ResponseEntity<ApiResponse<BatchResponse>> importUsers(@RequestPart("file") MultipartFile file) {
-        Integer count = userService.importUsers(file);
-        return ResponseFactory.ok("Users imported successfully", new BatchResponse(count));
     }
 
     @GetMapping

@@ -13,7 +13,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -100,18 +99,6 @@ public class LeaveController {
                 .map(leaveCreditMapper::toDto)
                 .toList();
         return ResponseFactory.created("Leave credits created successfully", leaveCredits);
-    }
-
-    @PreAuthorize("hasRole('HR')")
-    @PostMapping(value = "/credits", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(
-            summary = "Import leave credits from CSV",
-            description = "Bulk import leave credits from a CSV file. Requires HR role. Returns the count of imported leave credits.",
-            operationId = "importLeaveCredits"
-    )
-    public ResponseEntity<ApiResponse<BatchResponse>> importLeaveCredits(@RequestPart MultipartFile file) {
-        Integer count = leaveCreditService.importLeaveCredits(file);
-        return ResponseFactory.ok("Leave credits imported successfully", new BatchResponse(count));
     }
 
     @GetMapping("/credits")
