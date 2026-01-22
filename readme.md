@@ -2,167 +2,92 @@
 
 ![Java](https://img.shields.io/badge/Java-21-orange?style=flat-square&logo=openjdk)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.6-brightgreen?style=flat-square&logo=spring-boot)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14+-blue?style=flat-square&logo=postgresql)
-![Maven](https://img.shields.io/badge/Maven-3.8+-C71A36?style=flat-square&logo=apache-maven)
-![Status](https://img.shields.io/badge/Status-In%20Development-blue?style=flat-square)
+![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=flat-square&logo=docker)
+![CI/CD Pipeline](https://img.shields.io/github/actions/workflow/status/iodsky/sweldox-api/ci-cd.yml?branch=master&style=flat-square&logo=github&label=CI%2FCD)
 
-## 🎯 Project Overview
+## 🎯 Overview
 
-Sweldox API is a full-featured Human Resources Information System (HRIS) that manages employee data, attendance tracking, and payroll processing. The system implements role-based access control, JWT authentication, and follows clean architecture principles.
+Sweldox is a Human Resources Information System (HRIS) RESTful API that manages employee data, attendance tracking, leave management, and payroll processing. Built with Spring Boot 3.5.6 and Java 21, it features JWT authentication, role-based access control, and comprehensive API documentation with Swagger/OpenAPI.
 
-## 🏗️ Architecture & Technology Stack
+## 🛠️ Technology Stack
 
-### Core Technologies
-- **Java 21** - Modern Java LTS version with latest language features
-- **Spring Boot 3.5.6** - Enterprise-grade application framework
-- **Spring Data JPA** - Database abstraction and ORM
-- **Spring Security** - Authentication and authorization
-- **PostgreSQL** - Relational database management
-- **JWT (JSON Web Tokens)** - Stateless authentication mechanism
-- **Maven** - Dependency management and build automation
-
-### Key Dependencies
-- **Lombok** - Reduces boilerplate code
-- **OpenCSV** - CSV file processing for data imports
-- **Spring Validation** - Request validation
-- **Spring Boot DevTools** - Development productivity tools
-- **JJWT (JSON Web Token for Java)** - JWT token generation and validation
-
-## 📁 Project Structure
-
-```
-├── src/
-│   ├── main/
-│   │   ├── java/com/iodsky/sweldox/
-│   │   │   ├── Application.java      # Application entry point
-│   │   │   ├── attendance/                   # Attendance management module
-│   │   │   ├── common/                       # Shared utilities and DTOs
-│   │   │   ├── csvimport/                    # CSV import functionality
-│   │   │   ├── employee/                     # Employee management module
-│   │   │   ├── leave/                        # Leave management module
-│   │   │   ├── organization/                 # Department & Position management
-│   │   │   ├── payroll/                      # Payroll processing module
-│   │   │   └── security/                     # Authentication & Authorization
-│   │   └── resources/
-│   │       ├── application.yml               # Main configuration
-│   │       ├── application-prod.             # Production config
-│   │       └── application-local.yml         # Local development config
-│   └── test/                                 # Unit and integration tests
-├── db-init/                                  # Database initialization scripts
-├── Dockerfile                                # Container configuration
-├── pom.xml                                   # Maven dependencies
-└── README.md
-```
+- **Java 21** - Modern Java LTS with latest features
+- **Spring Boot 3.5.6** - Enterprise application framework
+- **Spring Data JPA** - Database ORM and abstraction
+- **Spring Security + JWT** - Authentication & authorization
+- **Spring Batch** - Bulk data processing
+- **PostgreSQL** - Production database (AWS RDS)
+- **Flyway** - Database migration management
+- **Swagger/OpenAPI** - API documentation
+- **Docker** - Containerization and deployment
+- **GitHub Actions** - CI/CD pipeline
+- **Maven** - Build and dependency management
 
 ## 🗄️ Database Entity-Relationship Diagram
 
 ![](docs/images/erd.png)
 
-## 🔑 Key Features
+## ✨ Key Features
 
 ### 1. Employee Management
-- CRUD operations for employee records
-- Department and position assignment
-- Supervisor relationships and hierarchies
+- Complete CRUD operations for employee records
+- Department and position assignment with supervisor hierarchies
 - Government ID tracking (SSS, PhilHealth, TIN, Pag-IBIG)
-- Compensation details management (salary, allowances)
-- Advanced filtering by department, supervisor, and status
-- Pagination support for large datasets
-- CSV bulk import for employee data
+- Compensation management (salary, allowances, benefits)
+- Advanced filtering, pagination, and bulk CSV import
 
 ### 2. Attendance Tracking
-- Clock in/out functionality with automatic timestamp recording
-- Attendance history by date range
-- Employee-specific attendance records
-- HR oversight of all attendance data across organization
-- Date-based filtering and pagination
+- Clock in/out with automatic timestamp recording
+- Attendance history with date range filtering
+- Employee-specific and HR oversight capabilities
+- Integration with payroll system
 
-### 3. Payroll Processing
-- Automated payroll calculation based on attendance and compensation
-- Batch payroll generation for all employees in one operation
-- Individual payroll processing for specific employees
-- Payroll history tracking with period-based filtering
+### 3. Leave Management
+- **Leave Requests**: Create, track, and manage leave requests with multiple types (Vacation, Sick, Maternity, Paternity, Solo Parent, Bereavement)
+- **Leave Credits**: Annual leave allocations with fiscal year tracking
+- **Business Day Calculation**: Automatic exclusion of weekends
+- **Approval Workflow**: PENDING → APPROVED/REJECTED status flow
+- **CSV Import**: Bulk initialization of leave credits
+
+### 4. Payroll Processing
+- Automated payroll calculation based on attendance
+- Philippine payroll standards compliance (SSS, PhilHealth, Pag-IBIG, Withholding Tax)
+- Batch processing for all employees or individual generation
+- Benefits and deductions management
 - Period-based payroll reports with pagination
-- Integration with attendance data for accurate calculations
-- Benefits and deductions management system
 
-### 4. Leave Management
-- **Leave Request Management**
-  - Create, update, and track employee leave requests
-  - Support for multiple leave types: Vacation, Sick, Maternity, Paternity, Solo Parent, Bereavement
-  - Automatic business day calculation (excludes weekends)
-  - Leave status workflow: PENDING → APPROVED/REJECTED
-  - Employees can manage their own leave requests
-  - HR can view and approve/reject all leave requests
-  - Validation to prevent overlapping leave requests
-  - Note/reason field for leave justification
-  
-- **Leave Credit Management**
-  - Initialize leave credits for employees (HR only)
-  - Default annual leave allocations:
-    - Vacation Leave: 14 days
-    - Sick Leave: 7 days
-    - Bereavement Leave: 5 days
-  - Fiscal year-based credit tracking
-  - Automatic credit validation before leave approval
-  - Real-time credit balance tracking
-  - CSV bulk import for leave credit initialization
-  - View personal leave credit balances
-
-### 5. Security & Authentication
+### 5. Security & Access Control
 - JWT-based stateless authentication
-- Role-based access control (RBAC) with method-level security
-- Secure password hashing with BCrypt
-- Protected API endpoints with authorization checks
-- User session management through JWT tokens
-- Token-based API security
+- Role-based access control (HR, PAYROLL, IT, EMPLOYEE)
+- Method-level security with BCrypt password hashing
+- Secure API endpoints with authorization checks
 
 ### 6. User Management
-- User account creation and management
-- Role assignment and permission control
-- Integration with employee records
-- CSV bulk import for user accounts
-- IT-role exclusive access for user administration
+- User account creation and role assignment
+- Employee integration and bulk CSV import
+- IT-role exclusive administration access
 
-### 7. Data Import
-- CSV file processing for bulk data imports
-- Employee data import with validation
-- User account bulk creation
+### Philippine Payroll System
 
-### Payroll Calculation Details
-
-The payroll system implements Philippine payroll standards with automated calculation of:
+The system implements Philippine payroll standards:
 
 **Mandatory Deductions:**
-- **SSS (Social Security System)** - Progressive contribution table based on monthly salary compensation
-- **PhilHealth** - 3% premium rate with maximum cap of ₱1,800
-- **Pag-IBIG (HDMF)** - 1-2% based on monthly compensation, capped at ₱100
-- **Withholding Tax** - Progressive tax brackets according to TRAIN Law
-
-**Gross Pay Calculation:**
-- Based on attendance records (hours worked)
-- Hourly rate derived from monthly salary
-- Overtime and holiday pay support (when applicable)
-
-**Benefits Management:**
-- Rice subsidy
-- Phone allowance
-- Clothing allowance
-- Other customizable benefits
+- SSS (Social Security System) - Progressive contribution table
+- PhilHealth - 3% premium rate (max ₱1,800)
+- Pag-IBIG - 1-2% based on compensation (max ₱100)
+- Withholding Tax - Progressive tax brackets (TRAIN Law)
 
 **Net Pay Formula:**
 ```
-Net Pay = Gross Pay + Total Benefits - (SSS + PhilHealth + Pag-IBIG + Withholding Tax)
+Net Pay = Gross Pay + Benefits - (SSS + PhilHealth + Pag-IBIG + Tax)
 ```
 
 ## 🔐 User Roles & Permissions
 
-The system implements a role-based access control system with the following roles:
-
-- **HR** - Full access to employee management, attendance oversight, and organizational data
-- **PAYROLL** - Access to payroll processing and generation
-- **IT** - Access to employee information for system administration
-- **EMPLOYEE** - Basic access to personal information, attendance, and payroll records
+- **HR** - Employee management, attendance oversight, leave approvals, organizational data
+- **PAYROLL** - Payroll processing and generation
+- **IT** - User management and system administration
+- **EMPLOYEE** - Personal information, attendance, and payroll records
 
 ## 🚀 Getting Started
 
@@ -254,46 +179,42 @@ The executable JAR will be generated in the `target/` directory.
 
 ## 🐳 Docker Support
 
-The project includes Docker support for containerized deployment with Docker Compose.
+The project includes Docker support for containerized deployment.
 
-### Docker Compose Configuration
-
-The project includes two Docker Compose configurations:
+### Docker Compose Configurations
 
 1. **`compose.db.yml`** - Database only (for local development)
    - Runs PostgreSQL container
    - Exposes port 5432
-   - Includes database initialization scripts
 
 2. **`compose.yml`** - Full application stack (for production deployment)
-   - Spring Boot API container
-   - Configured to connect to external AWS RDS PostgreSQL (no local database container)
+   - Spring Boot API container (from GitHub Container Registry)
+   - Connects to AWS RDS PostgreSQL
    - Watchtower for automatic container updates
-   - Traefik reverse proxy integration (external network)
+   - Traefik reverse proxy integration
 
-### Build Docker Image
+### Usage
+
+**Build Docker Image:**
 ```powershell
 docker build -t sweldox-api .
 ```
 
-### Run with Docker Compose (Full Stack)
+**Run Full Stack (Production):**
 ```powershell
-# Ensure .env file is configured with production settings
 docker compose --env-file .env up -d
 ```
 
-### Run Database Only (Local Development)
+**Run Database Only (Local Development):**
 ```powershell
 docker compose --env-file .env -f compose.db.yml up -d
 ```
 
-The Dockerfile uses a multi-stage build:
-- **Builder stage**: Eclipse Temurin JDK 21 for compilation
-- **Runtime stage**: Eclipse Temurin JRE 21 for optimized deployment
+The Dockerfile uses a multi-stage build with Eclipse Temurin JDK 21 for compilation and JRE 21 for optimized deployment.
 
 ## 🧪 Testing
 
-The project includes comprehensive test coverage:
+Comprehensive test coverage includes:
 
 - **Unit Tests** - Service layer business logic
 - **Test Coverage Areas**:
@@ -309,32 +230,16 @@ Run tests with:
 ./mvnw test
 ```
 
-## 📋 Project Roadmap
+## 📚 API Documentation
 
-### Phase 1: Core Development ✅
-- [x] Employee management system
-- [x] Attendance tracking
-- [x] Payroll processing
-- [x] Leave management system
-- [x] JWT authentication
-- [x] Role-based authorization
-- [x] CSV import functionality
-- [x] Unit tests
-- [x] User management system
-- [x] Docker support with multi-stage builds
-- [x] Multi-environment configuration (local/prod)
+The API documentation is available via Swagger/OpenAPI UI:
 
-### Phase 2: AWS RDS Migration 📅
-- [X] **AWS RDS PostgreSQL Setup**
+**Local Development:**
+```
+http://localhost:8001/swagger-ui/index.html
+```
 
-### Phase 3: AWS EC2 Deployment 📅
-- [X] **EC2 Instance Configuration**
-- [X] **Traefik Reverse Proxy Setup**
-- [X] **Deployment Pipeline**
-  - Deploy application via Docker Compose
-  - Configure Watchtower for automatic updates
-  - Set up monitoring and logging
-
-### Phase 4: Documentation & Enhancement 🔮
-- [ ] OpenAPI/Swagger documentation
----
+**OpenAPI JSON Spec:**
+```
+http://localhost:8001/v3/api-docs
+```
