@@ -3,7 +3,7 @@
 ![Java](https://img.shields.io/badge/Java-21-orange?style=flat-square&logo=openjdk)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.6-brightgreen?style=flat-square&logo=spring-boot)
 ![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=flat-square&logo=docker)
-![CI/CD Pipeline](https://img.shields.io/github/actions/workflow/status/iodsky/sweldox-api/ci-cd.yml?branch=master&style=flat-square&logo=github&label=CI%2FCD)
+![CI/CD Pipeline](https://img.shields.io/github/actions/workflow/status/iodsky/sweldox/ci-cd.yml?branch=master&style=flat-square&logo=github&label=CI%2FCD)
 
 ## 🎯 Overview
 
