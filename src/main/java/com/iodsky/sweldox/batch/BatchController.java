@@ -6,11 +6,11 @@ import com.iodsky.sweldox.common.response.ApiResponse;
 import com.iodsky.sweldox.common.response.ResponseFactory;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.launch.JobLauncher;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,27 +28,19 @@ import java.util.Collection;
 
 @RestController
 @RequestMapping("/job")
+@RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Batch Jobs", description = "Batch job management endpoints")
 public class BatchController {
 
     private final JobLauncher jobLauncher;
     private final JobExplorer jobExplorer;
-    private final Job importEmployeesJob;
+    private final Job employeeImportJob;
     private final Job userImportJob;
+    private final Job generatePayrollJob;
 
     @Value("${batch.upload.directory}")
     private String uploadDirectory;
-
-    public BatchController(JobLauncher jobLauncher,
-                          JobExplorer jobExplorer,
-                          @Qualifier("employeeImportJob") Job importEmployeesJob,
-                          @Qualifier("userImportJob") Job userImportJob) {
-        this.jobLauncher = jobLauncher;
-        this.jobExplorer = jobExplorer;
-        this.importEmployeesJob = importEmployeesJob;
-        this.userImportJob = userImportJob;
-    }
 
     @PreAuthorize("hasAnyRole('HR', 'IT')")
     @PostMapping(value = "/import-employees", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -61,7 +53,7 @@ public class BatchController {
 
         try {
             String fileName = uploadCsvFile(file);
-            JobExecution jobExecution = launchJob(importEmployeesJob, fileName);
+            JobExecution jobExecution = launchJob(employeeImportJob, fileName);
 
             JobLaunchResponse response = JobLaunchResponse.builder()
                     .jobExecutionId(jobExecution.getId())
@@ -101,6 +93,40 @@ public class BatchController {
         } catch (Exception e) {
             log.error("Failed to launch user import job", e);
             throw new RuntimeException("Failed to launch user import job: " + e.getMessage(), e);
+        }
+    }
+
+    @PreAuthorize("hasAnyRole('HR', 'PAYROLL')")
+    @PostMapping("/generate-payroll")
+    @Operation(
+            summary = "Generate payroll for all active employees",
+            description = "Launch a batch job to generate payroll for all active employees for the specified period. Returns job execution ID for tracking."
+    )
+    public ResponseEntity<ApiResponse<JobLaunchResponse>> generatePayroll(
+            @RequestParam String periodStartDate,
+            @RequestParam String periodEndDate,
+            @RequestParam String payDate) {
+
+        try {
+            JobParameters jobParameters = new JobParametersBuilder()
+                    .addString("periodStartDate", periodStartDate)
+                    .addString("periodEndDate", periodEndDate)
+                    .addString("payDate", payDate)
+                    .addLong("timestamp", System.currentTimeMillis())
+                    .toJobParameters();
+
+            JobExecution jobExecution = jobLauncher.run(generatePayrollJob, jobParameters);
+
+            JobLaunchResponse response = JobLaunchResponse.builder()
+                    .jobExecutionId(jobExecution.getId())
+                    .message("Payroll generation job launched successfully")
+                    .build();
+
+            return ResponseFactory.ok("Job launched successfully", response);
+
+        } catch (Exception e) {
+            log.error("Failed to launch payroll generation job", e);
+            throw new RuntimeException("Failed to launch payroll generation job: " + e.getMessage(), e);
         }
     }
 
