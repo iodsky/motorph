@@ -1,4 +1,4 @@
-package com.iodsky.sweldox.organization;
+package com.iodsky.sweldox.department;
 
 import com.iodsky.sweldox.common.BaseModel;
 import jakarta.persistence.Column;
