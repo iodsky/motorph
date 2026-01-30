@@ -1,0 +1,42 @@
+package com.iodsky.sweldox.payroll.contribution.pagIbig;
+
+import com.iodsky.sweldox.common.BaseModel;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.UUID;
+
+@Entity
+@Table(name = "pagibig_contribution")
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class PagibigContribution extends BaseModel {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    @Column(name = "employee_rate", nullable = false, precision = 5, scale = 4)
+    private BigDecimal employeeRate;
+
+    @Column(name = "employer_rate", nullable = false, precision = 5, scale = 4)
+    private BigDecimal employerRate;
+
+    @Column(name = "low_income_threshold")
+    private BigDecimal lowIncomeThreshold;
+
+    @Column(name = "low_income_employee_rate", precision = 5, scale = 4)
+    private BigDecimal lowIncomeEmployeeRate;
+
+    @Column(name = "max_salary_cap", nullable = false)
+    private BigDecimal maxSalaryCap;
+
+    @Column(name = "effective_date", nullable = false, unique = true)
+    private LocalDate effectiveDate;
+
+}
