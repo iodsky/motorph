@@ -1,8 +1,11 @@
 package com.iodsky.sweldox.batch.payroll;
 
-import com.iodsky.sweldox.payroll.Payroll;
-import com.iodsky.sweldox.payroll.PayrollBuilder;
-import com.iodsky.sweldox.payroll.PayrollRepository;
+
+import com.iodsky.sweldox.payroll.core.Payroll;
+import com.iodsky.sweldox.payroll.core.PayrollBuilder;
+import com.iodsky.sweldox.payroll.core.PayrollCalculator;
+import com.iodsky.sweldox.payroll.core.PayrollConfiguration;
+import com.iodsky.sweldox.payroll.core.PayrollRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.configuration.annotation.StepScope;
@@ -20,6 +23,7 @@ public class PayrollitemProcessor implements ItemProcessor<Long, Payroll> {
 
     private final PayrollBuilder payrollBuilder;
     private final PayrollRepository payrollRepository;
+    private final PayrollCalculator payrollCalculator;
 
     @Value("#{jobParameters['periodStartDate']}")
     private String periodStartDateStr;
@@ -30,11 +34,19 @@ public class PayrollitemProcessor implements ItemProcessor<Long, Payroll> {
     @Value("#{jobParameters['payDate']}")
     private String payDateStr;
 
+    private PayrollConfiguration payrollConfiguration;
+
     @Override
     public Payroll process(Long employeeId) {
         LocalDate periodStartDate = LocalDate.parse(periodStartDateStr);
         LocalDate periodEndDate = LocalDate.parse(periodEndDateStr);
         LocalDate payDate = LocalDate.parse(payDateStr);
+
+        // Load configuration
+        if (payrollConfiguration == null) {
+            log.info("Loading payroll configuration for pay date: {}", payDate);
+            payrollConfiguration = payrollCalculator.loadConfiguration(payDate);
+        }
 
         // Check if payroll already exists for this employee and period
         boolean exists = payrollRepository.existsByEmployee_IdAndPeriodStartDateAndPeriodEndDate(
@@ -43,12 +55,11 @@ public class PayrollitemProcessor implements ItemProcessor<Long, Payroll> {
         if (exists) {
             log.warn("Payroll already exists for employee {} for period {} to {}. Skipping...",
                     employeeId, periodStartDate, periodEndDate);
-            return null; // Return null to skip this item
+            return null;
         }
 
-        // Build and return the payroll
         try {
-            Payroll payroll = payrollBuilder.buildPayroll(employeeId, periodStartDate, periodEndDate, payDate);
+            Payroll payroll = payrollBuilder.buildPayroll(employeeId, periodStartDate, periodEndDate, payDate, payrollConfiguration);
             log.debug("Successfully built payroll for employee {}", employeeId);
             return payroll;
         } catch (Exception ex) {

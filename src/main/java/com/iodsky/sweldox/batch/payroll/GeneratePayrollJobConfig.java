@@ -1,7 +1,7 @@
 package com.iodsky.sweldox.batch.payroll;
 
 import com.iodsky.sweldox.employee.EmployeeService;
-import com.iodsky.sweldox.payroll.Payroll;
+import com.iodsky.sweldox.payroll.core.Payroll;
 import jakarta.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Job;
