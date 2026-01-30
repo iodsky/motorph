@@ -1,4 +1,4 @@
-package com.iodsky.sweldox.payroll;
+package com.iodsky.sweldox.payroll.benefit;
 
 import com.iodsky.sweldox.common.BaseModel;
 import jakarta.persistence.Entity;

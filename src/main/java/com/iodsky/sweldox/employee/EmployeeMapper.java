@@ -1,8 +1,9 @@
 package com.iodsky.sweldox.employee;
 
-import com.iodsky.sweldox.payroll.BenefitDto;
-import com.iodsky.sweldox.payroll.BenefitMapper;
-import com.iodsky.sweldox.payroll.Benefit;
+
+import com.iodsky.sweldox.payroll.benefit.Benefit;
+import com.iodsky.sweldox.payroll.benefit.BenefitDto;
+import com.iodsky.sweldox.payroll.benefit.BenefitMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
