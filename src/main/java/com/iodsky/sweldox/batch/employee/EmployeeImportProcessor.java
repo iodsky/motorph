@@ -2,10 +2,10 @@ package com.iodsky.sweldox.batch.employee;
 
 import com.iodsky.sweldox.employee.Employee;
 import com.iodsky.sweldox.employee.EmployeeRepository;
-import com.iodsky.sweldox.organization.Department;
-import com.iodsky.sweldox.organization.DepartmentRepository;
-import com.iodsky.sweldox.organization.Position;
-import com.iodsky.sweldox.organization.PositionRepository;
+import com.iodsky.sweldox.department.Department;
+import com.iodsky.sweldox.department.DepartmentRepository;
+import com.iodsky.sweldox.position.Position;
+import com.iodsky.sweldox.position.PositionRepository;
 import com.iodsky.sweldox.payroll.benefit.Benefit;
 
 import com.iodsky.sweldox.payroll.benefit.BenefitType;

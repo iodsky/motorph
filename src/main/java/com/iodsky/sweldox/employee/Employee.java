@@ -2,8 +2,8 @@ package com.iodsky.sweldox.employee;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.iodsky.sweldox.common.BaseModel;
-import com.iodsky.sweldox.organization.Department;
-import com.iodsky.sweldox.organization.Position;
+import com.iodsky.sweldox.department.Department;
+import com.iodsky.sweldox.position.Position;
 import com.iodsky.sweldox.payroll.benefit.Benefit;
 import jakarta.persistence.*;
 import lombok.*;

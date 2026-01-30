@@ -2,10 +2,10 @@ package com.iodsky.sweldox.employee;
 
 import com.iodsky.sweldox.common.DuplicateField;
 import com.iodsky.sweldox.common.exception.DuplicateFieldException;
-import com.iodsky.sweldox.organization.Department;
-import com.iodsky.sweldox.organization.DepartmentService;
-import com.iodsky.sweldox.organization.Position;
-import com.iodsky.sweldox.organization.PositionService;
+import com.iodsky.sweldox.department.Department;
+import com.iodsky.sweldox.department.DepartmentService;
+import com.iodsky.sweldox.position.Position;
+import com.iodsky.sweldox.position.PositionService;
 import com.iodsky.sweldox.payroll.benefit.Benefit;
 import com.iodsky.sweldox.payroll.benefit.BenefitService;
 import com.iodsky.sweldox.security.user.User;
