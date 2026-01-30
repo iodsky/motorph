@@ -130,7 +130,7 @@ public class BatchController {
         }
     }
 
-    @PreAuthorize("hasAnyRole('HR', 'IT')")
+    @PreAuthorize("hasAnyRole('HR', 'IT', 'PAYROLL')")
     @GetMapping("/{jobExecutionId}")
     @Operation(
             summary = "Get job execution details",
