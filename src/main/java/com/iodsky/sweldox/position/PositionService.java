@@ -48,6 +48,16 @@ public class PositionService {
         Position position = getPositionById(id);
         Department department = departmentService.getDepartmentById(request.getDepartmentId());
 
+        if (!position.getDepartment().getId().equals(request.getDepartmentId())) {
+            long employeeCount = positionRepository.countEmployeesByPositionId(id);
+            if (employeeCount > 0) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "Cannot change department for position '" + position.getTitle() + "'. It has " + employeeCount + " active employee(s) assigned to it."
+                );
+            }
+        }
+
         position.setDepartment(department);
         position.setTitle(request.getTitle());
 
