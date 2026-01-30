@@ -19,6 +19,7 @@ public class PositionService {
 
     private final PositionRepository positionRepository;
     private final DepartmentService departmentService;
+    private final PositionMapper positionMapper;
 
     public Position createPosition(PositionRequest request) {
         if (positionRepository.existsById(request.getId())) {
@@ -27,10 +28,8 @@ public class PositionService {
 
         Department department = departmentService.getDepartmentById(request.getDepartmentId());
 
-        Position position = new Position();
-        position.setId(request.getId());
+        Position position = positionMapper.toEntity(request);
         position.setDepartment(department);
-        position.setTitle(request.getTitle());
 
         return positionRepository.save(position);
     }

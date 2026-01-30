@@ -9,8 +9,6 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class PositionMapper {
 
-    private final DepartmentService departmentService;
-
     public PositionDto toDto(Position position) {
         return PositionDto.builder()
                 .id(position.getId())
@@ -23,13 +21,9 @@ public class PositionMapper {
     }
 
     public Position toEntity(PositionRequest request) {
-        Department department = departmentService.getDepartmentById(request.getDepartmentId());
-
-        Position position = new Position();
-        position.setId(request.getId());
-        position.setDepartment(department);
-        position.setTitle(request.getTitle());
-
-        return position;
+        return Position.builder()
+                .id(request.getId())
+                .title(request.getTitle())
+                .build();
     }
 }
