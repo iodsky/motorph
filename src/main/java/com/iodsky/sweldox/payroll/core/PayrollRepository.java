@@ -1,4 +1,4 @@
-package com.iodsky.sweldox.payroll;
+package com.iodsky.sweldox.payroll.core;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

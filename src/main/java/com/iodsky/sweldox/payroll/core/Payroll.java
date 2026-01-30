@@ -1,8 +1,9 @@
-package com.iodsky.sweldox.payroll;
+package com.iodsky.sweldox.payroll.core;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.iodsky.sweldox.common.BaseModel;
 import com.iodsky.sweldox.employee.Employee;
+import com.iodsky.sweldox.payroll.deduction.Deduction;
 import jakarta.persistence.*;
 import lombok.*;
 

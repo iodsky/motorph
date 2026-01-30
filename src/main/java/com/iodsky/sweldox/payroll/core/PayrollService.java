@@ -1,4 +1,4 @@
-package com.iodsky.sweldox.payroll;
+package com.iodsky.sweldox.payroll.core;
 
 import com.iodsky.sweldox.common.DateRange;
 import com.iodsky.sweldox.common.DateRangeResolver;

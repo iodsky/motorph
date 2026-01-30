@@ -1,4 +1,4 @@
-package com.iodsky.sweldox.payroll;
+package com.iodsky.sweldox.payroll.core;
 
 import jakarta.annotation.Nullable;
 import lombok.Data;

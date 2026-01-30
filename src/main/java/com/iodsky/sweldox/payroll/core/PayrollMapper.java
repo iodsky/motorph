@@ -1,5 +1,6 @@
-package com.iodsky.sweldox.payroll;
+package com.iodsky.sweldox.payroll.core;
 
+import com.iodsky.sweldox.payroll.deduction.Deduction;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
