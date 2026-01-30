@@ -1,7 +1,8 @@
-package com.iodsky.sweldox.organization;
+package com.iodsky.sweldox.position;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.iodsky.sweldox.common.BaseModel;
+import com.iodsky.sweldox.department.Department;
 import jakarta.persistence.*;
 import lombok.*;
 
